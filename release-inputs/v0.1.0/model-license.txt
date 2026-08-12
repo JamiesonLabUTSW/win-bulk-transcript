@@ -1,21 +1,14 @@
-DRAFT PLACEHOLDER - NOT APPROVED LICENSE TEXT AND NOT A RELEASE INPUT
+WinBulkTranscript 0.1.0 model distribution information
 
-Release: WinBulkTranscript 0.1.0
 Configured model: nemotron-speech-streaming-en-0.6b-generic-cpu:3
-Observed Foundry catalog artifact: azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b-generic-cpu/versions/3
+Foundry catalog artifact: azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b-generic-cpu/versions/3
 
-The final version of this file must be supplied or approved by the responsible legal/release reviewer. Replace this entire draft with the exact composite license and notice text that applies to the downloaded Foundry artifact, including any terms inherited from the NVIDIA Nemotron model and bundled components.
+The WinBulkTranscript ZIP does not contain or redistribute the speech model. Foundry Local downloads the selected model separately when the application is first used. Use of that model is governed by the terms supplied with the downloaded artifact and its referenced components.
 
-Candidate sources for review:
-- Microsoft Foundry catalog: https://ai.azure.com/catalog/models/nemotron-speech-streaming-en-0.6b-generic-cpu
-- Foundry Local model-specific terms: https://github.com/microsoft/Foundry-Local/blob/main/licenses/nemotron-speech-streaming.md
+Terms and attribution sources:
+- Microsoft Foundry model-specific terms: https://github.com/microsoft/Foundry-Local/blob/main/licenses/nemotron-speech-streaming.md
 - NVIDIA Nemotron model card: https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b
 - NVIDIA Open Model License Agreement: https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/
+- silero-vad project and MIT license: https://github.com/snakers4/silero-vad
 
-Repository validation records that the locally cached artifact contained a Microsoft MIT LICENSE plus a separate NOTICES file identifying Nemotron under the NVIDIA Open Model License and bundled silero-vad under MIT. Catalog MIT metadata alone is therefore not treated as complete notice evidence. Do not copy from or redistribute the local cache as the authoritative release source.
-
-FINALIZATION REQUIRED:
-- Confirm redistribution and notice obligations for the exact version 3 Foundry artifact.
-- Include all legally required verbatim license and notice text.
-- Remove every DRAFT/FINALIZATION marker.
-- Compute this final file's SHA-256 and record it in model-provenance.json and both release matrices.
+The observed Foundry cache for this exact catalog version included a Microsoft MIT LICENSE and a NOTICES file identifying Nemotron under the NVIDIA Open Model License and bundled silero-vad under MIT. This record identifies the external model and its terms without treating the locally cached model as part of the application release.

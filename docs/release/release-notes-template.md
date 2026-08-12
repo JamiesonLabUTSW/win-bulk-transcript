@@ -36,4 +36,4 @@ Version 1 remains a self-contained folder/ZIP deployment. A literal single-file 
 
 `<support contact, issue tracker, or distribution contact>`
 
-Before publishing, replace every placeholder, then compute this completed file's SHA-256 and put that filename/hash in each test matrix's `Release notes source` header. The publisher verifies that the notes name the requested version and exact ZIP artifact for each architecture and retain the unsigned SmartScreen warning.
+Before publishing, fill every template field, then compute this completed file's SHA-256 and put that filename/hash in each test matrix's `Release notes source` header. The publisher verifies that the notes name the requested version and exact ZIP artifact for each architecture and retain the unsigned SmartScreen warning.

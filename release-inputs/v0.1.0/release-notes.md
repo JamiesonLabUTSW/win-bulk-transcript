@@ -1,43 +1,30 @@
-# WinBulkTranscript release notes - 0.1.0 (DRAFT)
+# WinBulkTranscript 0.1.0 preview
 
 Release date: `2026-08-12`
 Release policy: `preview`
-Architecture artifacts: `WinBulkTranscript-0.1.0-win-x64.zip`, `WinBulkTranscript-0.1.0-win-arm64.zip`
-Release evidence: draft matrices in `release-inputs/v0.1.0/win-x64/` and `release-inputs/v0.1.0/win-arm64/`; final release records will be attached to the GitHub Release.
 
-> **Draft only:** v0.1.0 is not approved or supported yet. Both architecture matrices must be completed before these notes can be used to publish a release.
+## Downloads
 
-## Included artifacts
+- `WinBulkTranscript-0.1.0-win-x64.zip` for Intel and AMD Windows PCs
+- `WinBulkTranscript-0.1.0-win-arm64.zip` for Windows on Arm
 
-This release is planned to provide unpackaged, self-contained Windows folders in architecture-specific ZIP archives. Choose x64 for Intel/AMD Windows PCs or ARM64 for Windows on Arm. Extract the entire ZIP before launching `WinBulkTranscript.exe`; do not run inside the ZIP or copy the EXE by itself. Each ZIP will have a matching `.zip.sha256` sidecar, and `SHA256SUMS.txt` will cover both archives.
+Extract the entire matching ZIP, then run `WinBulkTranscript.exe`. Do not run the application inside the ZIP or copy the EXE by itself. Each ZIP has a `.zip.sha256` sidecar, and `SHA256SUMS.txt` covers both archives.
 
-The published folder will include .NET and Windows App SDK dependencies plus release-specific provenance, notices, payload inventory, test matrix, and metadata. It will not contain the speech model.
+The archives are self-contained and include the required .NET and Windows App SDK files. The speech model is not included; Foundry Local downloads `nemotron-speech-streaming-en-0.6b-generic-cpu:3` on first use. A cached model can be used offline.
 
-## First use and connectivity
+## Preview status
 
-The application downloads its configured local speech model on first use. A later cached launch is intended to run offline. An uncached offline launch is intended to report an actionable error. These behaviors remain release gates and must be confirmed on clean x64 and ARM64 machines before this draft is approved.
+This is an early version-zero preview. Mike Holcomb approved the documented x64 and ARM64 validation limitations on 2026-08-12. Those limitations include incomplete clean-machine, SmartScreen, offline, full manual UI, representative-acoustic, resilience, and ARM64 execution coverage. They are accepted for v0.1.0 and are recorded in the release matrices included with each archive.
 
 ## Unsigned download and SmartScreen warning
 
-**This version is unsigned.** Windows SmartScreen may display a warning for a ZIP or executable downloaded from the internet, and enterprise policy can block an unsigned application. Obtain the archive only from the repository's GitHub Releases page and verify its published SHA-256 checksum. Do not disable Windows security controls or bypass an organization's security policy to run this application.
+**This version is unsigned.** Windows SmartScreen may warn about a ZIP or executable downloaded from the internet, and enterprise policy can block unsigned applications. Obtain the archive from this repository's GitHub Releases page and verify its SHA-256 checksum. Do not disable Windows security controls or bypass an organization's security policy.
 
-## Validation summary
+## Release details
 
-- Exact configured model variant: `nemotron-speech-streaming-en-0.6b-generic-cpu:3`
-- Release source: `v0.1.0`
-- Release policy: `preview`
-- Matrix status: `documented x64 and ARM64 preview limitations accepted by Mike Holcomb on 2026-08-12; mandatory release inputs remain pending`
-- Model provenance input: `model-provenance.json` - SHA-256 `TBD after finalization`
-- x64 runtime/framework notice input: `win-x64/runtime-framework-notices.txt` - SHA-256 `TBD after legal review`
-- ARM64 runtime/framework notice input: `win-arm64/runtime-framework-notices.txt` - SHA-256 `TBD after legal review`
-- Known limitations or operator notes: no clean-machine, SmartScreen, offline, complete manual UAT, representative-acoustic, or ARM64 execution acceptance has been recorded; model and runtime notices remain under review.
+- Source: `v0.1.0`
+- Model: `nemotron-speech-streaming-en-0.6b-generic-cpu:3`
+- Deployment: self-contained folder/ZIP
+- Support and feedback: `https://github.com/JamiesonLabUTSW/win-bulk-transcript/issues`
 
-## Deployment decision
-
-Version 0.1.0 uses self-contained folder/ZIP deployment. The retained literal single-file x64 result is an informational compatibility experiment only and is not a release artifact.
-
-## Support information
-
-Draft contact: repository maintainers via `https://github.com/JamiesonLabUTSW/win-bulk-transcript/issues`.
-
-Before publication, remove the draft warning, enter the actual release date, confirm the support channel, update the validation summary to show both matrices passed, and recompute this file's SHA-256 for both matrix headers.
+The retained x64 single-file experiment is informational. It is not a v0.1.0 release artifact.

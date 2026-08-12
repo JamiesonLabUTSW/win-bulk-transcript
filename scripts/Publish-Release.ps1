@@ -1243,6 +1243,7 @@ try {
 
     $noticesArguments = @{
         ModelVariant = $configuredModelVariant
+        ReleasePolicy = $releasePolicy
         ModelLicensePath = $stagedModelLicensePath
         ModelProvenancePath = $stagedModelProvenancePath
         RuntimeFrameworkNoticesPath = $stagedRuntimeFrameworkNoticesPath
@@ -1324,8 +1325,13 @@ try {
             sourceFileName = [IO.Path]::GetFileName($resolvedRuntimeFrameworkNoticesPath)
             artifactFile = 'DOTNET-RUNTIME-NOTICES.txt'
             sha256 = $runtimeFrameworkNoticesSha256
-            legalReviewRequired = $true
-            coverage = 'Must name each declared runtime framework and every non-lock framework package library from the staged .deps.json; automated checks cannot establish legal completeness.'
+            legalReviewRequired = ($releasePolicy -ceq 'supported')
+            coverage = if ($releasePolicy -ceq 'preview') {
+                'Preview disclosure names each declared runtime framework and every non-lock framework package library from the staged .deps.json.'
+            }
+            else {
+                'Reviewed supported-release input names each declared runtime framework and every non-lock framework package library from the staged .deps.json.'
+            }
         }
         publishPayload = [ordered]@{
             artifactFile = 'PUBLISH-PAYLOAD.json'

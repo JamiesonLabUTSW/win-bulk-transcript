@@ -227,7 +227,7 @@ Invoke-PolicyMatrixAssertion -Version '1.0.0' -Policy 'supported' -Status 'Passe
 
 $rejectedUnapprovedRisk = $false
 try {
-    Invoke-PolicyMatrixAssertion -Version '0.1.0' -Policy 'preview' -Status 'Accepted risk' -RiskAcceptance 'TBD'
+    Invoke-PolicyMatrixAssertion -Version '0.1.0' -Policy 'preview' -Status 'Accepted risk' -RiskAcceptance 'Missing approval'
 }
 catch {
     $rejectedUnapprovedRisk = $_.Exception.Message.IndexOf('Preview risk acceptance is not finalized', [StringComparison]::Ordinal) -ge 0

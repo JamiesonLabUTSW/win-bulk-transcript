@@ -1,20 +1,20 @@
 # Release test matrix
 
-Release version: `TBD`
-Release date: `TBD`
-Release Foundry model variant: `TBD`
-Release source: `TBD`
-Release policy: `TBD` (`preview` for 0.x; `supported` for 1.x and later)
-Preview risk acceptance: `TBD` (when any applicable preview row uses `Accepted risk`, replace with `Approver: <name>; Date: <YYYY-MM-DD>; Decision: <explicit decision>`)
-Release notes source: `TBD`
-Model provenance source: `TBD`
-Runtime framework notices source: `TBD`
-Single-file experiment record: `TBD` (future information only; folder/ZIP deployment remains version 1)
+Release version: `<semantic version without v>`
+Release date: `<YYYY-MM-DD>`
+Release Foundry model variant: `<exact model variant>`
+Release source: `v<version>`
+Release policy: `<preview | supported>`
+Preview risk acceptance: `Not applicable` or `Approver: <name>; Date: <YYYY-MM-DD>; Decision: <explicit decision>`
+Release notes source: `release-notes.md sha256:<lowercase SHA-256>`
+Model provenance source: `model-provenance.json sha256:<lowercase SHA-256>`
+Runtime framework notices source: `runtime-framework-notices.txt sha256:<lowercase SHA-256>`
+Single-file experiment record: `Not recorded` or `<evidence path>` (optional future information)
 
 The release source is the exact `v<version>` tag for a tag release (or the full commit only for an explicitly local/manual build). The release policy is derived from the version and cannot be selected independently. Preview 0.x releases allow exactly `Passed`, `Accepted risk`, or `Not applicable`; every non-passing row needs a concrete rationale, and any `Accepted risk` row requires a finalized risk-acceptance header. Supported 1.x and later releases require exactly `Passed` for every applicable architecture row. The Foundry model must exactly match the configured application model. Each source header must use exact format `<file name> sha256:<lowercase SHA-256>`: use [the release-notes template](release-notes-template.md), [model-provenance template](model-provenance-template.json), and [runtime/framework notices template](runtime-framework-notices-template.txt).
 
 
-Before running the publisher, replace the headers and both `<version>` placeholders. For the architecture being published, use only statuses permitted by the version-derived policy and retain evidence or rationale in the final column. The three source headers are filename-and-hash bindings to the exact external release inputs; do not enter a repository template name or an un-hashed path.
+Before running the publisher, fill the headers and both `<version>` asset names. For the architecture being published, use only statuses permitted by the version-derived policy and retain evidence or rationale in the final column. The three source headers are filename-and-hash bindings to the exact external release inputs; do not enter a repository template name or an un-hashed path.
 
 | Area | x64 | ARM64 | Evidence / notes |
 |---|---|---|---|

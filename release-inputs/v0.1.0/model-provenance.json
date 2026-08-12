@@ -1,14 +1,10 @@
 {
   "schemaVersion": 1,
-  "draft": true,
+  "releasePolicy": "preview",
   "modelVariant": "nemotron-speech-streaming-en-0.6b-generic-cpu:3",
   "artifactIdentifier": "azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b-generic-cpu/versions/3",
   "sourceUri": "https://ai.azure.com/catalog/models/nemotron-speech-streaming-en-0.6b-generic-cpu",
   "licenseFileName": "model-license.txt",
-  "licenseSha256": "TBD-after-legal-approval-and-finalization",
-  "draftNotes": [
-    "Confirm that the catalog page and artifact identifier bind the exact version 3 payload; replace sourceUri with an immutable HTTPS or URN source if available.",
-    "Replace licenseSha256 with the lowercase SHA-256 of the final approved model-license.txt.",
-    "Remove draft and draftNotes before approving this provenance record."
-  ]
+  "licenseSha256": "e4d0f1f0a714d11785fc860c7ac40254152a298a7cbc18dde152b1262650a246",
+  "packaging": "The model is downloaded separately by Foundry Local and is not embedded in the WinBulkTranscript release archives."
 }

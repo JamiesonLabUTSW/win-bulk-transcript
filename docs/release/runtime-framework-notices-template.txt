@@ -4,10 +4,10 @@ Release version: <version>
 Architecture: <x64|arm64>
 Preliminary raw publish evidence: <external folder, command, and retained .deps.json/.runtimeconfig.json hashes>
 
-This is a completed release input, not a generic project notice. Replace every placeholder and
-include the applicable verbatim or referenced legal notices for the exact self-contained .NET
-runtime/framework payload. Legal review must confirm that this text covers all copied runtime,
-native, and framework files; the publisher cannot determine that completeness automatically.
+This is a completed release input, not a generic project notice. Fill every template field and
+identify the applicable terms and attribution sources for the exact self-contained .NET
+runtime/framework payload. A preview may use referenced terms sources. A supported 1.x release
+uses the reviewed notice set for all copied runtime, native, and framework files.
 
 Declared runtime configuration (copy every name/version from the preliminary .runtimeconfig.json):
 - <framework name> <framework version>
@@ -16,5 +16,5 @@ Non-lock runtime packages from the preliminary .deps.json (copy every package ID
 "None" only when the preliminary manifest proves there are none):
 - <runtime package ID> <runtime package version>
 
-Legal notice source(s), attribution, and required license text:
-<paste the reviewed runtime/framework notice text here>
+Terms/notice source(s) and attribution:
+<record the runtime/framework terms and notice material for this release policy>

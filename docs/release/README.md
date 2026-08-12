@@ -1,6 +1,6 @@
 # Release evidence
 
-This directory records the evidence needed to turn a successful build into a supported release. It intentionally contains templates and instructions rather than claims that unrun architecture and clean-machine gates have passed. A completed tag release stores its reviewed inputs in a committed [`release-inputs/v<version>` dossier](../../release-inputs/README.md).
+This directory records the evidence used to turn a successful build into a release. Version-zero releases use the preview policy; version 1 and later use the supported-release policy. A tag release stores its inputs in a committed [`release-inputs/v<version>` dossier](../../release-inputs/README.md).
 
 ## Distribution format
 
@@ -16,8 +16,8 @@ Complete a release test matrix before publishing an architecture. The publisher 
 - The entire source working tree is clean, every release-owned source path is tracked at `HEAD`, and `HEAD` remains unchanged through restore and publish.
 - The version-derived release policy is recorded in the matrix. Preview 0.x releases permit exactly `Passed`, `Accepted risk`, or `Not applicable`; non-passing rows require concrete rationale, and `Accepted risk` requires `Approver: <name>; Date: <YYYY-MM-DD>; Decision: <explicit decision>`. Supported 1.x and later releases require exactly `Passed` for every applicable architecture row.
 - The matrix has a receipt row for the exact output ZIP name. Its checksum column should say that the publisher writes the matching sidecar; a ZIP cannot contain its own final hash.
-- Complete architecture-specific [release notes](release-notes-template.md), [model provenance](model-provenance-template.json), and [runtime/framework notices](runtime-framework-notices-template.txt). Their matrix headers must be the exact input filename plus SHA-256, not a generic template or an un-hashed path.
-- The runtime/framework notice input must name every framework from the final `.runtimeconfig.json` and every non-lock framework package from the final `.deps.json`. It still requires legal review for completeness.
+- Complete the [release notes](release-notes-template.md), [model provenance](model-provenance-template.json), and architecture-specific [runtime/framework information](runtime-framework-notices-template.txt). Their matrix headers must be the exact input filename plus SHA-256, not a generic template or an un-hashed path.
+- The runtime/framework input must name every framework from the final `.runtimeconfig.json` and every non-lock framework package from the final `.deps.json`. A preview records the current terms sources; a supported 1.x release requires the stricter reviewed notice set.
 - Record the literal single-file experiment result in the matrix header or linked evidence. It is future information only; do not replace the version 1 folder/ZIP artifact with that experiment.
 
 For a tag release, set each matrix's Release source header to the exact tag, such as `v1.2.3`. The publisher verifies that the tag resolves to the checked-out revision. For an explicitly local/manual package without `-ReleaseSourceRef`, use the full output of `git rev-parse HEAD`.
@@ -48,9 +48,9 @@ $artifactsRoot = 'C:\release-artifacts'
 
 The [`Release` workflow](../../.github/workflows/release.yml) runs for canonical SemVer tags such as `v1.2.3` and `v1.2.3-rc.1`. Before creating the tag:
 
-1. Complete all x64 and ARM64 clean-machine/UAT gates and institutional release approval.
+1. For a 0.x preview, record and approve any accepted validation limitations in both matrices. For a supported 1.x release, complete every x64 and ARM64 gate.
 2. Copy the templates into `release-inputs/v<version>/` using the documented dossier layout. Use one shared `release-notes.md` that names both ZIPs and architecture-specific matrices/runtime notices.
-3. Finalize the model license, provenance, shared release notes, and both runtime/framework notices. Hash those completed files, bind the hashes in each matrix, set `Release source` to the future tag, and satisfy the version-derived matrix policy. Legal/provenance, source binding, and artifact-integrity inputs are mandatory for both preview and supported releases.
+3. Complete the model information, provenance, shared release notes, and both runtime/framework information files. Hash those files, bind the hashes in each matrix, set `Release source` to the future tag, and satisfy the version-derived matrix policy. Preview inputs are disclosure records; supported 1.x inputs follow the stricter reviewed-input policy.
 4. Merge the dossier and all release changes to the repository's default branch. The tag workflow refuses a commit that is not reachable from that branch.
 5. Create the tag on that exact commit and push it: `git tag v1.2.3; git push origin v1.2.3`. Do not move or reuse a release tag.
 
@@ -97,11 +97,11 @@ The publisher refuses all existing final paths and atomically reserves an artifa
 
 If publishing fails before finalization, the reservation is released and any staging output is retained for inspection. If an interruption occurs during finalization, the `.publish-reservation` file remains and some final paths may exist. Do not rerun the same version/architecture or delete that reservation until the partial output has been inspected and deliberately recovered or discarded.
 
-## Notices and legal review
+## Notices
 
 The publisher invokes `New-ThirdPartyNotices.ps1` only after it has generated a staged `.deps.json`-bound `PUBLISH-PAYLOAD.json`. The generator refuses to overwrite an existing notice, validates that each actual lock-backed `.deps.json` package matches the App lock content hash and restored NuGet `.nupkg.metadata` content hash, and embeds available package license files plus the supplied model license/provenance. It separately lists declared runtime frameworks and non-lock runtime package libraries, then embeds the reviewed runtime/framework notice input.
 
-This is deliberately not a claim that the package lock alone covers a self-contained release. Automation can prove filename/hash/manifest relationships and that the supplied runtime text names the discovered framework/package records. It cannot decide whether copied framework, native, or runtime files are legally complete, so legal review remains a release gate. SPDX expressions and license URLs remain references that must be reviewed against the actual payload. The checked-in [template](THIRD-PARTY-NOTICES.md) is not a shipping notice.
+The package lock alone does not describe every file in a self-contained release. Automation proves filename/hash/manifest relationships and checks that the supplied runtime text names the discovered framework/package records. For a 0.x preview, the generated notice records those current disclosures. The supported 1.x policy additionally requires reviewed legal completeness. The checked-in [template](THIRD-PARTY-NOTICES.md) is not a shipping notice.
 
 ## Unsigned artifacts
 

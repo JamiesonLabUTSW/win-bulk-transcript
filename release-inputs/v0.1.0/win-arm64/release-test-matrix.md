@@ -1,6 +1,6 @@
-# WinBulkTranscript v0.1.0 release test matrix - ARM64 draft
+# WinBulkTranscript v0.1.0 preview release test matrix - ARM64
 
-Status: **Draft - no ARM64 execution acceptance has been recorded.**
+Status: **Approved preview - documented ARM64 limitations accepted by Mike Holcomb on 2026-08-12.**
 
 Release version: `0.1.0`
 Release date: `2026-08-12`
@@ -8,38 +8,38 @@ Release Foundry model variant: `nemotron-speech-streaming-en-0.6b-generic-cpu:3`
 Release source: `v0.1.0`
 Release policy: `preview`
 Preview risk acceptance: `Approver: Mike Holcomb; Date: 2026-08-12; Decision: Approve the documented v0.1.0 ARM64 preview limitations and Accepted risk rows.`
-Release notes source: `release-notes.md sha256:TBD-after-finalization`
-Model provenance source: `model-provenance.json sha256:TBD-after-legal-review`
-Runtime framework notices source: `runtime-framework-notices.txt sha256:TBD-after-legal-review`
-Single-file experiment record: `Pending` (future information only; folder/ZIP deployment remains the release target)
+Release notes source: `release-notes.md sha256:7c14fde3962190d5b03a691b5c6f371e0373848ce1a76ab0a44a0cabb0f03fac`
+Model provenance source: `model-provenance.json sha256:31e7bc929380f60d8939b81fce0700265034073aa78a13619c77b63b341a3e0e`
+Runtime framework notices source: `runtime-framework-notices.txt sha256:0b5f5af34c6f5979fd2facfde19c396b136557ec13769068da0a1fe9c1da4736`
+Single-file experiment record: `Not recorded` (optional future information; folder/ZIP deployment remains the release target)
 
-The ARM64 publisher will reject this draft until every ARM64 status uses an allowed preview value and the risk-acceptance and remaining headers are finalized. `Accepted risk` must remain an explicit decision, never an inference from missing evidence.
+`Accepted risk` records an ARM64 limitation explicitly accepted for v0.1.0. These rows are not blockers under the version-zero preview policy.
 
 | Area | x64 | ARM64 | Evidence / notes |
 |---|---|---|---|
-| Self-contained unpackaged folder launch on clean Windows 11 24H2 | Partial | Accepted risk | An ARM64 folder was structurally published with the required PRI, but it has not been launched on ARM64 hardware or a clean machine. |
-| ZIP extracted from a Mark-of-the-Web download | Pending | Accepted risk | Record exact ARM64 SmartScreen behavior from the final candidate; do not bypass organizational policy. |
-| No .NET SDK, Windows App SDK runtime, or Foundry CLI installed | Pending | Accepted risk | Requires a clean ARM64 machine and the final self-contained ZIP. |
-| Exact CPU model variant resolves, downloads, and loads | Partial | Accepted risk | Only x64 Phase 0 evidence exists; exact-variant CPU resolution must be exercised on ARM64. |
-| Known 16 kHz PCM transcription completes without pacing | Partial | Accepted risk | Only x64 Phase 0 evidence exists; run the known fixture on ARM64. |
-| Cancel download, append, and response read; later session recovers | Partial | Accepted risk | Only x64 cancellation/recovery evidence exists; repeat applicable cases on ARM64. |
-| First-run online model download | Partial | Accepted risk | Exercise the packaged first-run flow on a clean ARM64 machine. |
-| Cached launch while offline | Pending | Accepted risk | No qualifying ARM64 offline evidence recorded. |
-| Uncached launch while offline returns actionable error | Pending | Accepted risk | No qualifying ARM64 offline evidence recorded. |
-| Synthetic flat corpus: 30 valid audio-only MP4s | Partial | Accepted risk | Run the retained fixed-seed flat corpus through the ARM64 release candidate. |
-| Synthetic nested corpus: same 30 mirrored VTTs | Partial | Accepted risk | Run the retained nested corpus and compare mirrored outputs on ARM64. |
-| Media fixture matrix: valid control plus malformed/no-audio/empty/unsupported cases | Partial | Accepted risk | Regenerate provenance-bound fixture, extractor, workflow, and cancellation evidence on ARM64; retain rights clearance. |
-| Media extraction cancellation and temporary-WAV cleanup | Partial | Accepted risk | Run lifecycle-boundary and true in-flight cancellation on ARM64 and retain cleanup reports. |
-| End-to-end media/VAD/Foundry/coordinator/VTT success, cancellation, and failure preservation | Partial | Accepted risk | Repeat all production workflow scenarios on ARM64 hardware. |
-| Long input, low disk, read-only output, Unicode path | Partial | Accepted risk | Run long/Unicode, literal low-disk, read-only, and denied-output cases on ARM64. |
-| Cancellation, sleep/resume, and window-close coordination | Partial | Accepted risk | Perform cancellation, literal sleep/resume, and manual close coordination on ARM64. |
-| High contrast, 100-200% scale, keyboard-only, long strings | Partial | Accepted risk | Perform the complete manual WinUI accessibility/resizing/localization pass on ARM64. |
+| Self-contained unpackaged folder launch on clean Windows 11 24H2 | See x64 matrix | Accepted risk | An ARM64 folder was structurally published with the required PRI, but it has not been launched on ARM64 hardware or a clean machine. |
+| ZIP extracted from a Mark-of-the-Web download | See x64 matrix | Accepted risk | ARM64 SmartScreen behavior is not recorded for this preview; do not bypass organizational policy. |
+| No .NET SDK, Windows App SDK runtime, or Foundry CLI installed | See x64 matrix | Accepted risk | Clean-machine ARM64 coverage is deferred to the supported policy. |
+| Exact CPU model variant resolves, downloads, and loads | See x64 matrix | Accepted risk | Only x64 Phase 0 evidence exists; ARM64 execution coverage is deferred to the supported policy. |
+| Known 16 kHz PCM transcription completes without pacing | See x64 matrix | Accepted risk | Only x64 Phase 0 evidence exists; ARM64 execution coverage is deferred to the supported policy. |
+| Cancel download, append, and response read; later session recovers | See x64 matrix | Accepted risk | Only x64 cancellation/recovery evidence exists; ARM64 execution coverage is deferred to the supported policy. |
+| First-run online model download | See x64 matrix | Accepted risk | Packaged first-run ARM64 coverage is deferred to the supported policy. |
+| Cached launch while offline | See x64 matrix | Accepted risk | No qualifying ARM64 offline evidence is recorded for this preview. |
+| Uncached launch while offline returns actionable error | See x64 matrix | Accepted risk | No qualifying ARM64 offline evidence is recorded for this preview. |
+| Synthetic flat corpus: 30 valid audio-only MP4s | See x64 matrix | Accepted risk | ARM64 corpus execution is deferred to the supported policy. |
+| Synthetic nested corpus: same 30 mirrored VTTs | See x64 matrix | Accepted risk | ARM64 nested-corpus execution is deferred to the supported policy. |
+| Media fixture matrix: valid control plus malformed/no-audio/empty/unsupported cases | See x64 matrix | Accepted risk | ARM64 fixture and workflow coverage is deferred to the supported policy. |
+| Media extraction cancellation and temporary-WAV cleanup | See x64 matrix | Accepted risk | ARM64 lifecycle-boundary coverage is deferred to the supported policy. |
+| End-to-end media/VAD/Foundry/coordinator/VTT success, cancellation, and failure preservation | See x64 matrix | Accepted risk | ARM64 production-workflow coverage is deferred to the supported policy. |
+| Long input, low disk, read-only output, Unicode path | See x64 matrix | Accepted risk | ARM64 boundary-condition coverage is deferred to the supported policy. |
+| Cancellation, sleep/resume, and window-close coordination | See x64 matrix | Accepted risk | ARM64 lifecycle coverage is deferred to the supported policy. |
+| High contrast, 100-200% scale, keyboard-only, long strings | See x64 matrix | Accepted risk | Complete manual ARM64 UI coverage is deferred to the supported policy. |
 
 ## Future-information single-file experiment
 
 | Future-information check | x64 | ARM64 | Evidence / notes |
 |---|---|---|---|
-| Literal single-file publish and Foundry native probing after extraction | Recorded | Pending | x64 has an informational result; ARM64 remains optional future information and cannot compensate for folder/ZIP failures. |
+| Literal single-file publish and Foundry native probing after extraction | Recorded | Not recorded | x64 has an informational result; ARM64 remains optional future information and does not affect the folder/ZIP release. |
 
 ## Artifact checksums
 
