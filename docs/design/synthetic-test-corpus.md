@@ -81,11 +81,17 @@ test-assets/synthetic/
     <random-folder>/fixture-....mp4
     <random-folder>/<random-folder>/fixture-....mp4
     <random-folder>/<random-folder>/<random-folder>/fixture-....mp4
+  retained-master-pcm/                 (only with --retain-master-pcm)
+    fixture-001.wav
+    ...
+    fixture-030.wav
 ```
 
 Create exactly 30 uniquely named MP4 files in `flat`. Copy every flat file exactly once into `nested`; do not regenerate or select only a subset. Choose a deterministic random depth of one, two, or three directories and deterministic filesystem-safe folder names. Force coverage so at least several files occur at every depth, regardless of the seed.
 
 The nested copy must be byte-identical to its flat source. Record its relative path and SHA-256, then verify the copy hash. The expected VTT is stored outside both input directories so it cannot be mistaken for an existing output during collision-policy tests.
+
+When `--retain-master-pcm` is requested, publish one master PCM16/16 kHz/mono WAV per fixture in `retained-master-pcm`. This optional evidence root is outside the MP4 input layouts. It preserves the exact byte stream whose sample coordinates were used while assembling the manifest; it is not a decoded AAC artifact.
 
 ## Manifest contract
 
@@ -105,14 +111,16 @@ Fixture metadata:
 
 - stable fixture ID and file name;
 - flat path, nested relative path, and SHA-256;
-- target duration and measured encoded/decoded duration;
+- `masterPcmDataSha256`, the SHA-256 of raw master PCM16 data bytes;
+- short, medium, or long target-duration coverage band (ten fixtures each);
+- requested target, final master-PCM, and measured encoded/decoded durations;
 - audio-track count and video-track count;
 - ordered utterances with authored and normalized text;
 - utterance start/end master sample indices and seconds;
 - leading, inter-utterance, and trailing silence durations; and
 - expected VTT relative path.
 
-Expected VTT timestamps come from master PCM sample indices. AAC encoder delay and decode rounding can shift recovered boundaries slightly, so VAD timing assertions use an explicit tolerance initially set to 250 ms and adjusted only from measured round-trip evidence. Text and file-placement assertions do not need that timing tolerance.
+Expected VTT timestamps come from master PCM sample indices. AAC encoder delay and decode rounding can shift recovered boundaries slightly, so encoded-media VAD diagnostics retain decoded intervals separately rather than score them against master intervals. Hash-bound retained-master WAVs can support same-coordinate measurements, but manifest intervals still delimit synthesized TTS chunks (including configured `SpeechAppendedSilence.Default`) rather than independently labeled acoustic speech onset/offset. Therefore the Phase 2 VAD quality gate remains pending acoustic ground truth. Text and file-placement assertions do not need timing tolerance.
 
 ## Corpus acceptance checks
 
@@ -121,19 +129,22 @@ The generator succeeds only when all of these checks pass:
 1. Exactly 30 MP4 files exist in `flat` and exactly 30 beneath `nested`.
 2. Every flat file has one and only one nested copy with the same SHA-256.
 3. Every nested relative path is one to three directories deep, with coverage at all three depths.
-4. Every MP4 has exactly one audio track and no video track.
-5. Every decoded duration is between 30 and 120 seconds.
-6. Every speech utterance is between 5 and 10 seconds in the master PCM.
-7. Speech intervals are ordered, non-overlapping, and within the file duration.
-8. Each authored/normalized transcript and expected VTT agrees with the manifest.
-9. File and directory names are valid on Windows and exercise some spaces and Unicode without exceeding conservative path lengths.
-10. A second nested-layout run with the same seed produces the same placement map.
+4. Every MP4 has exactly one audio track and no video track; Windows media inspection reports MPEG-4 container and AAC audio subtypes; and recorded track metadata agrees with that inspection.
+5. The manifest records exactly ten short, ten medium, and ten long target-duration fixtures.
+6. Every decoded duration is between 30 and 120 seconds.
+7. Every speech utterance is between 5 and 10 seconds in the master PCM.
+8. Speech intervals are ordered, non-overlapping, and within the file duration.
+9. Each authored/normalized transcript and expected VTT agrees with the manifest.
+10. File and directory names are valid on Windows and exercise some spaces and Unicode without exceeding conservative path lengths.
+11. A second nested-layout run with the same seed produces the same placement map.
+12. When retained master PCM is requested, every expected retained WAV has the manifest sample count and raw PCM data SHA-256.
 
 ## How the corpus is used
 
 - Run the flat directory through the application and compare 30 output VTTs with normalized expected text and tolerant cue boundaries.
 - Run the nested directory and confirm the 30 output VTTs reproduce the same relative tree.
 - Compare each flat/nested pair's transcription result to catch traversal or path-mapping differences.
+- Run the VAD evaluator's `--source both` encoded-media diagnostic to compare the flat/nested decoded PCM and returned interval sequences automatically; use hash-bound retained master PCM only for synthesis-chunk measurements, not Phase 2 gate completion.
 - Prepopulate selected output VTTs to exercise the batch-wide Skip existing, Overwrite all, and Cancel choices.
-- Keep separate malformed, no-audio, empty-audio, and unsupported-codec fixtures for failure-path tests; they do not count toward these 30 valid files.
+- Keep the separate [malformed, no-audio, empty-audio, and unsupported-codec fixture matrix](../../test-assets/media-fixture-matrix.md) for failure-path tests; they do not count toward these 30 valid files.
 

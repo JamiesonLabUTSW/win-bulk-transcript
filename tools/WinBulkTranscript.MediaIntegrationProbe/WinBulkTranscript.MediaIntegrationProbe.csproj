@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
+    <RootNamespace>WinBulkTranscript.MediaIntegrationProbe</RootNamespace>
+    <AssemblyName>WinBulkTranscript.MediaIntegrationProbe</AssemblyName>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <!-- This is disposable Windows-runtime evidence code, deliberately outside the release solution. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference the production adapter rather than duplicating its MediaTranscoder implementation. -->
+    <ProjectReference Include="..\..\src\WinBulkTranscript.App\WinBulkTranscript.App.csproj" />
+  </ItemGroup>
+</Project>

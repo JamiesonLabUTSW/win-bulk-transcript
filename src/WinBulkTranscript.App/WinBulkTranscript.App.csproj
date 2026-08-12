@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
+    <RootNamespace>WinBulkTranscript.App</RootNamespace>
+    <AssemblyName>WinBulkTranscript</AssemblyName>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <PublishSelfContained>true</PublishSelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WinBulkTranscript.Core\WinBulkTranscript.Core.csproj" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+    <PackageReference Include="Microsoft.AI.Foundry.Local" />
+  </ItemGroup>
+
+  <!--
+    The WinUI build produces the app resource PRI beside the architecture-specific apphost, but
+    the standard unpackaged self-contained publish item list does not include it. Without this
+    file, Microsoft.UI.Xaml fails during startup before the application can create a window.
+  -->
+  <Target
+      Name="IncludeAppResourcePriInPublish"
+      AfterTargets="ComputeFilesToPublish"
+      Condition="'$(WindowsPackageType)' == 'None' and '$(SelfContained)' == 'true'">
+    <ItemGroup>
+      <ResolvedFileToPublish
+          Include="$(TargetDir)$(TargetName).pri"
+          Condition="Exists('$(TargetDir)$(TargetName).pri')">
+        <RelativePath>$(TargetName).pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+</Project>

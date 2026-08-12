@@ -1,6 +1,6 @@
 # Review of `win-audio-grader`
 
-Reviewed read-only from `C:\Users\holcm\work\win-audio-grader` on 2026-08-06. This is a local implementation review, so file references below are evidence locations rather than web citations.
+Reviewed read-only from a sibling `win-audio-grader` workspace on 2026-08-06. This is a local implementation review, so file references below are evidence locations rather than web citations.
 
 ## What the existing application solves
 

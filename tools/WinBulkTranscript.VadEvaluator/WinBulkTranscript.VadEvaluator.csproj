@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
+    <RootNamespace>WinBulkTranscript.VadEvaluator</RootNamespace>
+    <AssemblyName>WinBulkTranscript.VadEvaluator</AssemblyName>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <!-- Development-only evidence code; deliberately outside the release solution. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Corpus-mode evaluation deliberately calls the production Windows extractor. -->
+    <ProjectReference Include="..\..\src\WinBulkTranscript.App\WinBulkTranscript.App.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,5 +1,9 @@
 # Win Bulk Transcript planning index
 
+## Run the application
+
+For developer launch, local self-contained publish, first-run model behavior, and everyday batch use, see the repository [run guide](../README.md).
+
 Research snapshot: 2026-08-06.
 
 This directory is the design record for a small Windows 11 desktop utility that:
@@ -27,7 +31,7 @@ This directory is the design record for a small Windows 11 desktop utility that:
 - Windows 11 24H2 is the minimum supported release.
 - Initial distribution uses architecture-specific self-contained ZIP files, not a literal single-file executable.
 - Adaptive energy VAD is the accepted version 1 detector.
-- Documentation and planning only at this stage; no application implementation has been added.
+- The initial implementation now lives in `src/`, with deterministic Core tests in `tests/` and development-only media tooling in `tools/`. Architecture-specific publishing and the remaining clean-machine evidence are tracked in [release](release/README.md); they are not yet marked as passed.
 
 ## Recommended baseline
 
@@ -49,6 +53,10 @@ There is also one test project for deterministic core tests. No DI container, MV
 - [Architecture](design/architecture.md) — boundaries, responsibilities, state, concurrency, and failure behavior.
 - [Processing and WebVTT](design/processing-and-vtt.md) — end-to-end data flow, timestamps, progress, cancellation, and output rules.
 - [Synthetic MP4 test corpus](design/synthetic-test-corpus.md) — deterministic TTS fixtures, ground truth, and flat/nested directory layouts.
+- [Media failure-fixture matrix](../test-assets/media-fixture-matrix.md) — separate malformed, no-audio, empty-audio, and unsupported-codec acceptance cases.
+- [Windows media integration probe](../tools/WinBulkTranscript.MediaIntegrationProbe/README.md) — opt-in `MediaTranscoder`/temporary-WAV evidence using real local fixtures.
+- [End-to-end workflow integration probe](../tools/WinBulkTranscript.WorkflowIntegrationProbe/README.md) — opt-in production media/VAD/Foundry/coordinator/VTT evidence, including cancellation and final-output preservation.
+- [VAD tuning and evaluation record](validation/vad-tuning.md) — production defaults, corpus protocol, and pending quality evidence.
 - [Implementation plan](implementation-plan.md) — ordered construction phases and acceptance gates.
 - [Resolved decisions and validation questions](open-questions.md) — confirmed product choices and the empirical questions remaining for Phase 0/1.
 
