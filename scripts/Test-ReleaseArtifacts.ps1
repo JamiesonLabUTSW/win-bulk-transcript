@@ -95,6 +95,7 @@ function Get-ZipEntryBytes {
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $architectures = @('x64', 'arm64')
+$expectedReleasePolicy = if ($Version.StartsWith('0.', [StringComparison]::Ordinal)) { 'preview' } else { 'supported' }
 $expectedAssetNames = foreach ($architecture in $architectures) {
     $artifactName = "WinBulkTranscript-$Version-win-$architecture"
     "$artifactName.zip"
@@ -156,6 +157,7 @@ foreach ($architecture in $architectures) {
 
     Assert-Equal $releaseRecord.schemaVersion 2 "$releaseRecordFileName schemaVersion"
     Assert-Equal $releaseRecord.version $Version "$releaseRecordFileName version"
+    Assert-Equal $releaseRecord.releasePolicy $expectedReleasePolicy "$releaseRecordFileName release policy"
     Assert-Equal $releaseRecord.architecture $architecture "$releaseRecordFileName architecture"
     Assert-Equal $releaseRecord.runtimeIdentifier $rid "$releaseRecordFileName runtime identifier"
     Assert-Equal $releaseRecord.artifact.zipFile $zipFileName "$releaseRecordFileName ZIP filename"
@@ -224,6 +226,7 @@ foreach ($architecture in $architectures) {
 
         Assert-Equal $metadata.schemaVersion 2 "$zipFileName metadata schemaVersion"
         Assert-Equal $metadata.version $Version "$zipFileName metadata version"
+        Assert-Equal $metadata.releasePolicy $expectedReleasePolicy "$zipFileName metadata release policy"
         Assert-Equal $metadata.architecture $architecture "$zipFileName metadata architecture"
         Assert-Equal $metadata.runtimeIdentifier $rid "$zipFileName metadata runtime identifier"
         Assert-Equal $metadata.source.repositoryRevision $RepositoryRevision "$zipFileName metadata source revision" -IgnoreCase

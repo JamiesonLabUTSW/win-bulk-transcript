@@ -1,0 +1,20 @@
+WinBulkTranscript runtime/framework notices input
+
+Status: DRAFT - NOT LEGALLY REVIEWED OR APPROVED FOR DISTRIBUTION
+Release version: 0.1.0
+Architecture: arm64
+Preliminary raw publish evidence: artifacts/publish-smoke/20260811-final2-win-arm64; WinBulkTranscript.deps.json sha256:43325d17d6eae3b10fd1554af91a4c3fd7b003aea27cb9b0375556a8ee4d459b; WinBulkTranscript.runtimeconfig.json sha256:7be83462bd4743e27bdcbfc68c33a7a0b349f834a60a20527875ab7a9bd2a6bc
+
+The preliminary evidence is not the final tagged artifact. Regenerate and compare it from the v0.1.0 release candidate before approval.
+
+Declared runtime configuration:
+- Microsoft.NETCore.App 10.0.11
+
+Non-lock runtime packages from the preliminary .deps.json:
+- None. The preliminary dependency manifest contains no library with type "package" that is both absent from the App lock and classified as a runtime/framework package. Revalidate this claim against the final staged manifest.
+
+Candidate legal notice sources for review:
+- .NET Runtime 10.0.11 license: https://github.com/dotnet/runtime/blob/v10.0.11/LICENSE.TXT
+- .NET Runtime 10.0.11 third-party notices: https://github.com/dotnet/runtime/blob/v10.0.11/THIRD-PARTY-NOTICES.TXT
+
+FINALIZATION REQUIRED: replace this paragraph with the legally reviewed runtime/framework license and notice text required for the exact self-contained ARM64 payload. Confirm coverage of Microsoft.NETCore.App 10.0.11 and every copied runtime/native/framework file. Remove all DRAFT and FINALIZATION markers before hashing this file for the release matrix.

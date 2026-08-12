@@ -358,7 +358,11 @@ function Assert-ReleaseNotes {
         [string]$Version,
 
         [Parameter(Mandatory)]
-        [string]$ArtifactZipFileName
+        [string]$ArtifactZipFileName,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('preview', 'supported')]
+        [string]$ReleasePolicy
     )
 
     $notesText = [IO.File]::ReadAllText($Path)
@@ -376,6 +380,10 @@ function Assert-ReleaseNotes {
 
     if ($notesText -notmatch '(?i)\bunsigned\b' -or $notesText -notmatch '(?i)\bSmartScreen\b') {
         throw "Release notes '$Path' must retain the unsigned-download and SmartScreen warning."
+    }
+
+    if ($ReleasePolicy -ceq 'preview' -and $notesText -notmatch '(?i)\bpreview\b') {
+        throw "Release notes '$Path' must identify a version-zero release as a preview."
     }
 }
 
@@ -503,7 +511,11 @@ function Assert-CompletedReleaseTestMatrix {
         [string]$RuntimeFrameworkNoticesSource,
 
         [Parameter(Mandatory)]
-        [string]$ReleaseSource
+        [string]$ReleaseSource,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('preview', 'supported')]
+        [string]$ReleasePolicy
     )
 
     $matrixVersion = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Release version'
@@ -524,6 +536,11 @@ function Assert-CompletedReleaseTestMatrix {
     $matrixReleaseSource = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Release source'
     if (-not [string]::Equals($matrixReleaseSource, $ReleaseSource, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Release test matrix source '$matrixReleaseSource' does not match the verified release source '$ReleaseSource'."
+    }
+
+    $matrixReleasePolicy = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Release policy'
+    if (-not [string]::Equals($matrixReleasePolicy, $ReleasePolicy, [StringComparison]::Ordinal)) {
+        throw "Release test matrix policy '$matrixReleasePolicy' does not match version-derived policy '$ReleasePolicy'."
     }
 
     $matrixReleaseNotesSource = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Release notes source'
@@ -560,7 +577,14 @@ function Assert-CompletedReleaseTestMatrix {
     }
 
     $architectureColumn = if ($Architecture -ceq 'x64') { 1 } else { 2 }
+    $allowedStatuses = if ($ReleasePolicy -ceq 'preview') {
+        @('Passed', 'Accepted risk', 'Not applicable')
+    }
+    else {
+        @('Passed')
+    }
     $validatedRows = 0
+    $acceptedRiskRows = 0
     for ($index = $headerIndex + 1; $index -lt $lines.Count; $index++) {
         if ([string]::IsNullOrWhiteSpace($lines[$index])) {
             break
@@ -583,12 +607,17 @@ function Assert-CompletedReleaseTestMatrix {
             throw "Release test matrix row at line $($index + 1) has no test area."
         }
 
-        if ($cells[$architectureColumn] -cne 'Passed') {
-            throw "Release test matrix marks '$($cells[0])' as '$($cells[$architectureColumn])' for $Architecture. Every applicable row must be exactly 'Passed'."
+        $status = $cells[$architectureColumn]
+        if ($status -cnotin $allowedStatuses) {
+            throw "Release test matrix marks '$($cells[0])' as '$status' for $Architecture. Policy '$ReleasePolicy' allows only: $($allowedStatuses -join ', ')."
         }
 
         if ([string]::IsNullOrWhiteSpace($cells[3])) {
             throw "Release test matrix row '$($cells[0])' needs retained evidence or notes for $Architecture."
+        }
+
+        if ($status -ceq 'Accepted risk') {
+            $acceptedRiskRows++
         }
 
         $validatedRows++
@@ -596,6 +625,24 @@ function Assert-CompletedReleaseTestMatrix {
 
     if ($validatedRows -eq 0) {
         throw 'Release test matrix contains no applicable validation rows.'
+    }
+
+    if ($acceptedRiskRows -gt 0) {
+        $riskAcceptance = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Preview risk acceptance'
+        $riskAcceptanceMatch = [regex]::Match(
+            $riskAcceptance,
+            '^Approver: (?<approver>[^;]+); Date: (?<date>[0-9]{4}-[0-9]{2}-[0-9]{2}); Decision: (?<decision>.+)$',
+            [Text.RegularExpressions.RegexOptions]::CultureInvariant)
+        $riskAcceptanceDate = [DateTime]::MinValue
+        $hasValidRiskDate = $riskAcceptanceMatch.Success -and [DateTime]::TryParseExact(
+            $riskAcceptanceMatch.Groups['date'].Value,
+            'yyyy-MM-dd',
+            [Globalization.CultureInfo]::InvariantCulture,
+            [Globalization.DateTimeStyles]::None,
+            [ref]$riskAcceptanceDate)
+        if (-not $riskAcceptanceMatch.Success -or -not $hasValidRiskDate -or $riskAcceptance -match '(?i)\b(TBD|Pending)\b') {
+            throw "Preview matrix contains $acceptedRiskRows accepted-risk row(s) for $Architecture but Preview risk acceptance is not finalized as 'Approver: <name>; Date: <YYYY-MM-DD>; Decision: <explicit decision>'."
+        }
     }
 
     $expectedArtifactName = "WinBulkTranscript-$Version-win-$Architecture.zip"
@@ -1040,6 +1087,7 @@ if (-not [string]::Equals($ModelVariant, $configuredModelVariant, [StringCompari
 
 $repositoryRevision = Get-VerifiedReleaseRevision -RepositoryRoot $repositoryRoot -RequiredTrackedPaths $releaseOwnedRepositoryPaths
 $releaseSource = Get-ValidatedReleaseSource -RepositoryRoot $repositoryRoot -RepositoryRevision $repositoryRevision -SourceRef $ReleaseSourceRef
+$releasePolicy = if ($Version.StartsWith('0.', [StringComparison]::Ordinal)) { 'preview' } else { 'supported' }
 $dotnetSdkVersion = Get-DotnetSdkVersion
 $publisherScriptBytes = [IO.File]::ReadAllBytes($publisherScriptPath)
 $noticesGeneratorBytes = [IO.File]::ReadAllBytes($noticesGeneratorSourcePath)
@@ -1072,7 +1120,7 @@ if ([string]::IsNullOrWhiteSpace($runtimeFrameworkNoticesText)) {
     throw "The supplied runtime/framework notices file is empty: $resolvedRuntimeFrameworkNoticesPath"
 }
 
-Assert-ReleaseNotes -Path $resolvedReleaseNotesPath -Version $Version -ArtifactZipFileName $artifactZipFileName
+Assert-ReleaseNotes -Path $resolvedReleaseNotesPath -Version $Version -ArtifactZipFileName $artifactZipFileName -ReleasePolicy $releasePolicy
 $modelProvenance = Read-ModelProvenance -Path $resolvedModelProvenancePath -ExpectedModelVariant $configuredModelVariant -ModelLicensePath $resolvedModelLicensePath -ModelLicenseSha256 $modelLicenseSha256
 $releaseNotesSource = Get-ReleaseInputReference -Path $resolvedReleaseNotesPath -Sha256 $releaseNotesSha256
 $modelProvenanceSource = Get-ReleaseInputReference -Path $resolvedModelProvenancePath -Sha256 $modelProvenanceSha256
@@ -1100,6 +1148,7 @@ $matrixAssertion = @{
     ModelProvenanceSource = $modelProvenanceSource
     RuntimeFrameworkNoticesSource = $runtimeFrameworkNoticesSource
     ReleaseSource = $releaseSource
+    ReleasePolicy = $releasePolicy
 }
 $releaseStateAssertion = @{
     RepositoryRoot = $repositoryRoot
@@ -1216,6 +1265,7 @@ try {
         schemaVersion = 2
         generatedAtUtc = Get-UtcTimestamp
         version = $Version
+        releasePolicy = $releasePolicy
         architecture = $Architecture
         runtimeIdentifier = $rid
         source = [ordered]@{
@@ -1323,6 +1373,7 @@ try {
             embeddedMetadataSha256 = $metadataSha256
         }
         version = $Version
+        releasePolicy = $releasePolicy
         architecture = $Architecture
         runtimeIdentifier = $rid
         modelVariant = $configuredModelVariant

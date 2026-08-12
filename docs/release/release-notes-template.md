@@ -1,6 +1,7 @@
 # WinBulkTranscript release notes — `<version>`
 
 Release date: `<YYYY-MM-DD>`
+Release policy: `<preview for 0.x | supported for 1.x and later>`
 Architecture artifacts: `WinBulkTranscript-<version>-win-x64.zip`, `WinBulkTranscript-<version>-win-arm64.zip`
 Release evidence: `<links or retained paths to the completed architecture matrices and release records>`
 
@@ -20,6 +21,7 @@ The application downloads its configured local speech model on first use. A late
 
 - Exact configured model variant: `<model variant>`
 - Release source: `<v-prefixed release tag>`
+- Release policy: `<preview | supported>`
 - Matrix status: `<x64 Passed; ARM64 Passed>`
 - Model provenance input: `<file name and SHA-256>`
 - x64 runtime/framework notice input: `<file name and SHA-256>`

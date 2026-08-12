@@ -11,6 +11,8 @@ Approved releases provide two self-contained downloads:
 - `WinBulkTranscript-<version>-win-x64.zip` for ordinary Intel/AMD Windows 11 PCs.
 - `WinBulkTranscript-<version>-win-arm64.zip` for Windows on Arm PCs.
 
+Versions below 1.0 are preview releases and are marked as prereleases on GitHub. Their release notes and embedded matrices identify validation gaps accepted for preview; review those limitations before use. Version 1.0 and later uses the supported-release policy and requires every applicable architecture gate to pass.
+
 Download the matching archive and `SHA256SUMS.txt` from [GitHub Releases](https://github.com/JamiesonLabUTSW/win-bulk-transcript/releases), verify it, extract the **entire** ZIP to a normal folder, and launch `WinBulkTranscript.exe` from that extracted folder. Do not run it inside the ZIP or copy the EXE alone. The bundle includes .NET and Windows App SDK dependencies; the speech model is downloaded separately on first use.
 
 ```powershell

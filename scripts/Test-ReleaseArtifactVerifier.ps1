@@ -89,6 +89,7 @@ This version is unsigned and Windows SmartScreen may warn.
         $metadata = [ordered]@{
             schemaVersion = 2
             version = $version
+            releasePolicy = 'supported'
             architecture = $architecture
             runtimeIdentifier = $rid
             source = [ordered]@{
@@ -125,6 +126,7 @@ This version is unsigned and Windows SmartScreen may warn.
         $releaseRecord = [ordered]@{
             schemaVersion = 2
             version = $version
+            releasePolicy = 'supported'
             architecture = $architecture
             runtimeIdentifier = $rid
             modelVariant = 'synthetic-model:1'
