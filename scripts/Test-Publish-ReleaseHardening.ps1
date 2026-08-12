@@ -1,11 +1,18 @@
 [CmdletBinding()]
 param(
-    [string]$PublisherPath = (Join-Path $PSScriptRoot 'Publish-Release.ps1'),
+    [string]$PublisherPath,
 
-    [string]$NoticesGeneratorPath = (Join-Path $PSScriptRoot 'New-ThirdPartyNotices.ps1')
+    [string]$NoticesGeneratorPath
 )
 
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($PublisherPath)) {
+    $PublisherPath = Join-Path $PSScriptRoot 'Publish-Release.ps1'
+}
+
+if ([string]::IsNullOrWhiteSpace($NoticesGeneratorPath)) {
+    $NoticesGeneratorPath = Join-Path $PSScriptRoot 'New-ThirdPartyNotices.ps1'
+}
 
 function Assert-ContainsText {
     param(
@@ -83,6 +90,8 @@ foreach ($expected in @(
         '$projectLicenseBytes = [IO.File]::ReadAllBytes($projectLicensePath)',
         '$projectLicensePath; Sha256 = $projectLicenseSha256',
         '[IO.File]::WriteAllBytes($stagedProjectLicensePath, $projectLicenseBytes)',
+        'Get-ValidatedReleaseSource -RepositoryRoot $repositoryRoot',
+        'releaseSource = $releaseSource',
         "Invoke-Dotnet -Arguments @('restore', `$project, '--locked-mode')",
         "restoreCommand = @('dotnet', 'restore', `$projectRecordPath, '--locked-mode')",
         'New-VerifiedScriptBlock -ScriptBytes $noticesGeneratorBytes',

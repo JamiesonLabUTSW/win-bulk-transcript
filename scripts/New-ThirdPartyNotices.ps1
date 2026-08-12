@@ -947,7 +947,7 @@ if ($noticeEntries.Count -gt 0) {
     foreach ($entry in $noticeEntries) {
         foreach ($notice in $entry.SupplementalNotices) {
             $lines.Add('')
-            $lines.Add("### $($entry.Id) $($entry.Version) — $($notice.Path)")
+            $lines.Add("### $($entry.Id) $($entry.Version) - $($notice.Path)")
             $lines.Add('')
             $lines.Add('~~~text')
             $lines.Add($notice.Text.TrimEnd())

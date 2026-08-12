@@ -1,8 +1,11 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
+    [ValidatePattern('^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?$')]
     [string]$Version,
+
+    [ValidatePattern('^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?$')]
+    [string]$ReleaseSourceRef,
 
     [Parameter(Mandatory)]
     [ValidateSet('x64', 'arm64')]
@@ -108,7 +111,7 @@ function Get-RepositoryRevision {
     $output = & git -C $RepositoryRoot rev-parse HEAD
     $exitCode = $LASTEXITCODE
     if ($exitCode -ne 0) {
-        throw "git -C $RepositoryRoot rev-parse HEAD failed with exit code $exitCode. Release evidence requires the package-lock commit."
+        throw "git -C $RepositoryRoot rev-parse HEAD failed with exit code $exitCode. Release evidence requires the exact source revision."
     }
 
     $revision = [string](@($output | Select-Object -Last 1))
@@ -117,6 +120,37 @@ function Get-RepositoryRevision {
     }
 
     return $revision.ToLowerInvariant()
+}
+
+function Get-ValidatedReleaseSource {
+    param(
+        [Parameter(Mandatory)]
+        [string]$RepositoryRoot,
+
+        [Parameter(Mandatory)]
+        [string]$RepositoryRevision,
+
+        [AllowEmptyString()]
+        [string]$SourceRef
+    )
+
+    if ([string]::IsNullOrWhiteSpace($SourceRef)) {
+        return $RepositoryRevision
+    }
+
+    $tagRef = "refs/tags/$SourceRef"
+    $output = & git -C $RepositoryRoot rev-parse --verify "${tagRef}^{commit}"
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+        throw "Release source '$SourceRef' is not an existing local tag. Fetch or create the exact tag before publishing."
+    }
+
+    $tagRevision = [string](@($output | Select-Object -Last 1))
+    if (-not [string]::Equals($tagRevision, $RepositoryRevision, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Release source tag '$SourceRef' resolves to '$tagRevision', but the checked-out release revision is '$RepositoryRevision'."
+    }
+
+    return $SourceRef
 }
 
 function Assert-ReleaseWorkingTreeClean {
@@ -469,7 +503,7 @@ function Assert-CompletedReleaseTestMatrix {
         [string]$RuntimeFrameworkNoticesSource,
 
         [Parameter(Mandatory)]
-        [string]$RepositoryRevision
+        [string]$ReleaseSource
     )
 
     $matrixVersion = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Release version'
@@ -487,9 +521,9 @@ function Assert-CompletedReleaseTestMatrix {
         throw "Release test matrix model '$matrixModelVariant' does not match configured model '$ModelVariant'."
     }
 
-    $matrixLockCommit = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Package lock commit'
-    if (-not [string]::Equals($matrixLockCommit, $RepositoryRevision, [StringComparison]::OrdinalIgnoreCase)) {
-        throw "Release test matrix package-lock commit '$matrixLockCommit' does not match repository revision '$RepositoryRevision'."
+    $matrixReleaseSource = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Release source'
+    if (-not [string]::Equals($matrixReleaseSource, $ReleaseSource, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Release test matrix source '$matrixReleaseSource' does not match the verified release source '$ReleaseSource'."
     }
 
     $matrixReleaseNotesSource = Get-ReleaseMatrixHeaderValue -MatrixText $MatrixText -Label 'Release notes source'
@@ -946,6 +980,7 @@ $releaseOwnedRepositoryPaths = @(
     'LICENSE',
     'Directory.Build.props',
     'Directory.Packages.props',
+    'global.json',
     'WinBulkTranscript.sln',
     'src/WinBulkTranscript.App/WinBulkTranscript.App.csproj',
     'src/WinBulkTranscript.App/packages.lock.json',
@@ -953,6 +988,12 @@ $releaseOwnedRepositoryPaths = @(
     'src/WinBulkTranscript.App/Foundry/FoundryModelContract.cs',
     'scripts/Publish-Release.ps1',
     'scripts/New-ThirdPartyNotices.ps1',
+    'scripts/Invoke-TagRelease.ps1',
+    'scripts/Test-ReleaseArtifactVerifier.ps1',
+    'scripts/Test-ReleaseArtifacts.ps1',
+    'scripts/Test-ReleaseMechanics.ps1',
+    '.github/workflows/release.yml',
+    'release-inputs/README.md',
     'docs/release/README.md',
     'docs/release/release-test-matrix.md',
     'docs/release/release-notes-template.md',
@@ -998,6 +1039,7 @@ if (-not [string]::Equals($ModelVariant, $configuredModelVariant, [StringCompari
 }
 
 $repositoryRevision = Get-VerifiedReleaseRevision -RepositoryRoot $repositoryRoot -RequiredTrackedPaths $releaseOwnedRepositoryPaths
+$releaseSource = Get-ValidatedReleaseSource -RepositoryRoot $repositoryRoot -RepositoryRevision $repositoryRevision -SourceRef $ReleaseSourceRef
 $dotnetSdkVersion = Get-DotnetSdkVersion
 $publisherScriptBytes = [IO.File]::ReadAllBytes($publisherScriptPath)
 $noticesGeneratorBytes = [IO.File]::ReadAllBytes($noticesGeneratorSourcePath)
@@ -1057,7 +1099,7 @@ $matrixAssertion = @{
     ReleaseNotesSource = $releaseNotesSource
     ModelProvenanceSource = $modelProvenanceSource
     RuntimeFrameworkNoticesSource = $runtimeFrameworkNoticesSource
-    RepositoryRevision = $repositoryRevision
+    ReleaseSource = $releaseSource
 }
 $releaseStateAssertion = @{
     RepositoryRoot = $repositoryRoot
@@ -1178,6 +1220,8 @@ try {
         runtimeIdentifier = $rid
         source = [ordered]@{
             repositoryRevision = $repositoryRevision
+            releaseSource = $releaseSource
+            releaseSourceKind = if ([string]::IsNullOrWhiteSpace($ReleaseSourceRef)) { 'commit' } else { 'tag' }
             sourceTreeRequirement = 'Clean working tree with all release-owned paths tracked at HEAD before, during, and after publish.'
             publisherSource = $publisherScriptRecordPath
             publisherSourceSha256 = $publisherScriptSha256
