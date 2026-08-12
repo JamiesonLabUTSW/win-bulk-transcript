@@ -2,9 +2,15 @@
 
 WinBulkTranscript by Jamieson Lab is a Windows 11 desktop application that recursively transcribes MP4 files into WebVTT (`.vtt`) files.
 
-> **Development/UAT status:** local x64 implementation evidence is green, but this repository does not yet have a supported release. When a release is approved, installable ZIPs will appear on the [GitHub Releases page](https://github.com/JamiesonLabUTSW/win-bulk-transcript/releases). See [UAT evidence status](docs/validation/uat-evidence-status.md) and the [release test matrix](docs/release/release-test-matrix.md).
+> **Preview available:** unsigned x64 and ARM64 ZIPs are available on the [GitHub Releases page](https://github.com/JamiesonLabUTSW/win-bulk-transcript/releases). Versions below 1.0 are early previews; review their release notes and documented limitations before use.
 
-## Install a release ZIP
+## Start here
+
+**New to WinBulkTranscript? Follow the [Windows quickstart](docs/quickstart.md).** It walks through choosing the correct download, verifying and extracting the ZIP, responding safely to the Windows SmartScreen warning, downloading the model on first use, and creating your first transcripts.
+
+The short version is: download the x64 or ARM64 release ZIP, verify its checksum, use **Extract All**, run `WinBulkTranscript.exe` from the extracted folder, select input and output folders, and select **Start**. The application is portable and currently unsigned; there is no installer.
+
+## Release download details
 
 Approved releases provide two self-contained downloads:
 
@@ -64,7 +70,7 @@ dotnet publish .\src\WinBulkTranscript.App\WinBulkTranscript.App.csproj `
 
 Replace `win-x64` with `win-arm64` on an ARM64 Windows machine. Keep every file in the published folder beside `WinBulkTranscript.exe`; do not copy or run the EXE by itself. Version 1 uses a folder/ZIP deployment rather than a single-file executable or MSIX.
 
-## Use the application
+## Basic application use
 
 1. Select an **existing** input folder containing MP4 files. Discovery is recursive and Start stays disabled until it finds a readable MP4.
 2. Select an **existing**, writable output folder. A separate output folder is recommended.
@@ -79,7 +85,7 @@ Use **Cancel** to stop a batch cooperatively and wait for cleanup to finish befo
 ## Troubleshooting and status
 
 - **Start is disabled:** both folders must still exist, and the input tree must contain at least one readable `.mp4` file. Reparse points are not traversed.
-- **First model load fails:** connect to the internet and retry. Cached-offline behavior is intended but is not yet release-validated on a clean machine.
+- **First model load fails:** connect to the internet and retry. See the [quickstart troubleshooting section](docs/quickstart.md#troubleshooting) if the problem continues.
 - **Existing transcript files:** choose the batch-wide collision policy in the dialog; do not force-kill the app while it is processing.
 - **Supported package:** do not treat `artifacts\publish-smoke` or an Actions run artifact as a release. Only assets attached to an approved entry on the [GitHub Releases page](https://github.com/JamiesonLabUTSW/win-bulk-transcript/releases) are release downloads; if the page has no release, no supported package exists yet. See the [release process](docs/release/README.md).
 
@@ -94,6 +100,7 @@ Adding the required license notice does not itself authorize public release. UT 
 ## Related documentation
 
 - [Design and implementation index](docs/README.md)
+- [Windows quickstart](docs/quickstart.md)
 - [Implementation plan](docs/implementation-plan.md)
 - [UAT evidence status](docs/validation/uat-evidence-status.md)
 - [Release process](docs/release/README.md)
