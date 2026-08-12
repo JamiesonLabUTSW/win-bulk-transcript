@@ -10,6 +10,7 @@ public sealed class JobRowViewModel : ObservableObject
     private double _progress;
     private string _detail;
     private int _cueCount;
+    private string _timingText = "Waiting";
 
     /// <summary>Initializes a row from the first snapshot that names the input file.</summary>
     public JobRowViewModel(JobSnapshot snapshot)
@@ -56,8 +57,17 @@ public sealed class JobRowViewModel : ObservableObject
     public double Progress
     {
         get => _progress;
-        private set => SetProperty(ref _progress, value);
+        private set
+        {
+            if (SetProperty(ref _progress, value))
+            {
+                OnPropertyChanged(nameof(ProgressPercent));
+            }
+        }
     }
+
+    /// <summary>Gets progress normalized for a percentage-based progress bar.</summary>
+    public double ProgressPercent => Math.Clamp(Progress, 0, 1) * 100;
 
     /// <summary>Gets concise row detail.</summary>
     public string Detail
@@ -71,6 +81,13 @@ public sealed class JobRowViewModel : ObservableObject
     {
         get => _cueCount;
         private set => SetProperty(ref _cueCount, value);
+    }
+
+    /// <summary>Gets elapsed and estimated time for this file.</summary>
+    public string TimingText
+    {
+        get => _timingText;
+        private set => SetProperty(ref _timingText, value);
     }
 
     /// <summary>Gets the non-color state label shown beside the icon.</summary>
@@ -97,6 +114,9 @@ public sealed class JobRowViewModel : ObservableObject
 
     /// <summary>Gets an accessible combined description for a job row.</summary>
     public string AccessibleDescription => $"{RelativePath}. {StatusText}. {Detail}";
+
+    /// <summary>Updates the transient timing summary owned by the batch view model.</summary>
+    public void SetTimingText(string value) => TimingText = value;
 
     /// <summary>Applies the next immutable snapshot on the UI thread.</summary>
     public void Apply(JobSnapshot snapshot)

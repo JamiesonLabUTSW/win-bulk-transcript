@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Microsoft.UI.Xaml.Controls;
 using WinBulkTranscript.App.Composition;
 using WinBulkTranscript.App.Services;
@@ -11,6 +12,7 @@ namespace WinBulkTranscript.App.ViewModels;
 /// <summary>Owns page state, input validation, commands, and dispatcher-safe Core snapshot mapping.</summary>
 public sealed class MainViewModel : ObservableObject
 {
+    private const int TimingWindowSize = 5;
     private readonly ITranscriptionBatchRunner _batchRunner;
     private readonly IExistingOutputPolicyResolver _existingOutputPolicyResolver;
     private readonly IUiDispatcher _dispatcher;
@@ -39,6 +41,17 @@ public sealed class MainViewModel : ObservableObject
     private string _infoBarMessage = string.Empty;
     private InfoBarSeverity _infoBarSeverity = InfoBarSeverity.Informational;
     private int _validationVersion;
+    private readonly Queue<TimeSpan> _recentChunkDurations = new();
+    private readonly Queue<TimeSpan> _recentFileDurations = new();
+    private Stopwatch? _batchStopwatch;
+    private Stopwatch? _fileStopwatch;
+    private Stopwatch? _chunkStopwatch;
+    private string? _activeInputPath;
+    private int _activeChunkIndex;
+    private int _activeChunkCount;
+    private string _batchElapsedText = "Elapsed —";
+    private string _batchEtaText = "ETA —";
+    private string _currentFileTimingText = "Elapsed —  •  ETA —";
 
     /// <summary>Initializes a main view model with a Core bridge, collision dialog, and UI dispatcher.</summary>
     public MainViewModel(
@@ -159,7 +172,13 @@ public sealed class MainViewModel : ObservableObject
     public double CurrentFileProgressPercent
     {
         get => _currentFileProgressPercent;
-        private set => SetProperty(ref _currentFileProgressPercent, value);
+        private set
+        {
+            if (SetProperty(ref _currentFileProgressPercent, value))
+            {
+                OnPropertyChanged(nameof(BatchProgressPercent));
+            }
+        }
     }
 
     /// <summary>Gets whether model setup should show an indeterminate progress bar.</summary>
@@ -174,6 +193,35 @@ public sealed class MainViewModel : ObservableObject
         ? "No files queued."
         : $"{CompletedFileCount} of {TotalFileCount} files finished";
 
+    /// <summary>Gets combined completed-file and active-file batch progress.</summary>
+    public double BatchProgressPercent => TotalFileCount == 0
+        ? 0
+        : Math.Clamp(
+            ((double)CompletedFileCount + (_activeInputPath is null ? 0 : CurrentFileProgressPercent / 100)) / TotalFileCount,
+            0,
+            1) * 100;
+
+    /// <summary>Gets the live batch elapsed-time label.</summary>
+    public string BatchElapsedText
+    {
+        get => _batchElapsedText;
+        private set => SetProperty(ref _batchElapsedText, value);
+    }
+
+    /// <summary>Gets the empirical batch remaining-time estimate.</summary>
+    public string BatchEtaText
+    {
+        get => _batchEtaText;
+        private set => SetProperty(ref _batchEtaText, value);
+    }
+
+    /// <summary>Gets elapsed and empirical remaining time for the active file.</summary>
+    public string CurrentFileTimingText
+    {
+        get => _currentFileTimingText;
+        private set => SetProperty(ref _currentFileTimingText, value);
+    }
+
     /// <summary>Gets the number of terminal job rows.</summary>
     public int CompletedFileCount
     {
@@ -183,6 +231,7 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref _completedFileCount, value))
             {
                 OnPropertyChanged(nameof(BatchCountText));
+                OnPropertyChanged(nameof(BatchProgressPercent));
             }
         }
     }
@@ -196,6 +245,7 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref _totalFileCount, value))
             {
                 OnPropertyChanged(nameof(BatchCountText));
+                OnPropertyChanged(nameof(BatchProgressPercent));
             }
         }
     }
@@ -270,6 +320,9 @@ public sealed class MainViewModel : ObservableObject
         _batchCancellation?.Cancel();
     }
 
+    /// <summary>Refreshes stopwatch-backed labels between coordinator progress snapshots.</summary>
+    public void RefreshTimingDisplay() => UpdateTimingDisplay();
+
     private async Task StartAsync()
     {
         var batchGeneration = Interlocked.Increment(ref _batchGeneration);
@@ -289,6 +342,7 @@ public sealed class MainViewModel : ObservableObject
         IsProgressIndeterminate = false;
         IsInfoBarOpen = false;
         IsCancelling = false;
+        ResetTiming();
         IsRunning = true;
 
         using var cancellation = new CancellationTokenSource();
@@ -320,6 +374,9 @@ public sealed class MainViewModel : ObservableObject
                 CurrentStageText = "Cancelled";
             }
 
+            FinishActiveFile(includeDuration: false);
+            _batchStopwatch?.Stop();
+            UpdateTimingDisplay();
             BatchFinished?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -391,6 +448,7 @@ public sealed class MainViewModel : ObservableObject
     private void ApplySnapshot(BatchProgressSnapshot snapshot)
     {
         SyncRows(snapshot.Jobs);
+        UpdateTimingState(snapshot);
         CompletedFileCount = snapshot.CompletedFileCount;
         TotalFileCount = snapshot.TotalFileCount;
         CurrentFileName = string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
@@ -399,6 +457,7 @@ public sealed class MainViewModel : ObservableObject
         CurrentStageText = string.IsNullOrWhiteSpace(snapshot.StageText) ? "Working…" : snapshot.StageText;
         CurrentFileProgressPercent = Math.Clamp(snapshot.CurrentFileProgress, 0, 1) * 100;
         IsProgressIndeterminate = snapshot.IsRunning && snapshot.CurrentStage == ProcessingStage.LoadingModel;
+        UpdateTimingDisplay();
 
         if (!string.IsNullOrWhiteSpace(snapshot.FatalError))
         {
@@ -445,6 +504,197 @@ public sealed class MainViewModel : ObservableObject
             _jobsByInputPath.Remove(row.InputPath);
             Jobs.RemoveAt(index);
         }
+    }
+
+    private void ResetTiming()
+    {
+        _recentChunkDurations.Clear();
+        _recentFileDurations.Clear();
+        _activeInputPath = null;
+        _activeChunkIndex = 0;
+        _activeChunkCount = 0;
+        _fileStopwatch = null;
+        _chunkStopwatch = null;
+        _batchStopwatch = Stopwatch.StartNew();
+        BatchElapsedText = "Elapsed 0:00";
+        BatchEtaText = "ETA estimating…";
+        CurrentFileTimingText = "Elapsed 0:00  •  ETA estimating…";
+    }
+
+    private void UpdateTimingState(BatchProgressSnapshot snapshot)
+    {
+        var activeJob = snapshot.Jobs.FirstOrDefault(static job => job.State == JobState.Transcribing);
+        var nextActivePath = activeJob?.InputPath;
+
+        if (!string.Equals(_activeInputPath, nextActivePath, StringComparison.OrdinalIgnoreCase))
+        {
+            var previousCompleted = _activeInputPath is not null
+                && snapshot.Jobs.Any(job => string.Equals(job.InputPath, _activeInputPath, StringComparison.OrdinalIgnoreCase)
+                    && job.State == JobState.Complete);
+            FinishActiveFile(previousCompleted);
+            if (nextActivePath is not null)
+            {
+                _activeInputPath = nextActivePath;
+                _fileStopwatch = Stopwatch.StartNew();
+            }
+
+            OnPropertyChanged(nameof(BatchProgressPercent));
+        }
+
+        if (_activeInputPath is null)
+        {
+            return;
+        }
+
+        if (snapshot.CurrentStage == ProcessingStage.Transcribing && snapshot.CurrentChunkIndex > 0)
+        {
+            if (_activeChunkIndex != snapshot.CurrentChunkIndex)
+            {
+                FinishActiveChunk();
+                _activeChunkIndex = snapshot.CurrentChunkIndex;
+                _activeChunkCount = snapshot.CurrentChunkCount;
+                _chunkStopwatch = Stopwatch.StartNew();
+            }
+        }
+        else
+        {
+            FinishActiveChunk();
+        }
+    }
+
+    private void FinishActiveChunk()
+    {
+        if (_chunkStopwatch is not null)
+        {
+            AddRollingDuration(_recentChunkDurations, _chunkStopwatch.Elapsed);
+        }
+
+        _chunkStopwatch = null;
+        _activeChunkIndex = 0;
+        _activeChunkCount = 0;
+    }
+
+    private void FinishActiveFile(bool includeDuration = true)
+    {
+        if (_activeInputPath is null)
+        {
+            return;
+        }
+
+        if (includeDuration)
+        {
+            FinishActiveChunk();
+        }
+        else
+        {
+            _chunkStopwatch = null;
+            _activeChunkIndex = 0;
+            _activeChunkCount = 0;
+        }
+
+        if (_fileStopwatch is not null)
+        {
+            var elapsed = _fileStopwatch.Elapsed;
+            if (includeDuration)
+            {
+                AddRollingDuration(_recentFileDurations, elapsed);
+            }
+
+            if (_jobsByInputPath.TryGetValue(_activeInputPath, out var row))
+            {
+                row.SetTimingText(includeDuration
+                    ? $"Finished in {FormatDuration(elapsed)}"
+                    : $"Stopped after {FormatDuration(elapsed)}");
+            }
+        }
+
+        _fileStopwatch = null;
+        _activeInputPath = null;
+    }
+
+    private void UpdateTimingDisplay()
+    {
+        if (_batchStopwatch is null)
+        {
+            return;
+        }
+
+        BatchElapsedText = $"Elapsed {FormatDuration(_batchStopwatch.Elapsed)}";
+        if (IsRunning)
+        {
+            var remainingFiles = Math.Max(0, TotalFileCount - CompletedFileCount);
+            BatchEtaText = remainingFiles > 0 && TryAverage(_recentFileDurations, out var averageFile)
+                ? $"About {FormatDuration(Scale(averageFile, remainingFiles))} remaining"
+                : "ETA estimating…";
+        }
+        else
+        {
+            BatchEtaText = $"Finished in {FormatDuration(_batchStopwatch.Elapsed)}";
+        }
+
+        if (_activeInputPath is null || _fileStopwatch is null)
+        {
+            CurrentFileTimingText = IsRunning ? "Waiting for file timing…" : "Elapsed —  •  ETA —";
+            return;
+        }
+
+        var etaText = "ETA estimating…";
+        if (_activeChunkIndex > 0 && TryAverage(_recentChunkDurations, out var averageChunk))
+        {
+            var laterChunks = Math.Max(0, _activeChunkCount - _activeChunkIndex);
+            var currentRemaining = _chunkStopwatch is null
+                ? TimeSpan.Zero
+                : TimeSpan.FromTicks(Math.Max(0, averageChunk.Ticks - _chunkStopwatch.Elapsed.Ticks));
+            etaText = $"About {FormatDuration(currentRemaining + Scale(averageChunk, laterChunks))} remaining";
+        }
+
+        CurrentFileTimingText = $"Elapsed {FormatDuration(_fileStopwatch.Elapsed)}  •  {etaText}";
+        if (_jobsByInputPath.TryGetValue(_activeInputPath, out var row))
+        {
+            row.SetTimingText(CurrentFileTimingText);
+        }
+    }
+
+    private static void AddRollingDuration(Queue<TimeSpan> durations, TimeSpan duration)
+    {
+        if (duration <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        durations.Enqueue(duration);
+        while (durations.Count > TimingWindowSize)
+        {
+            durations.Dequeue();
+        }
+    }
+
+    private static bool TryAverage(Queue<TimeSpan> durations, out TimeSpan average)
+    {
+        if (durations.Count == 0)
+        {
+            average = default;
+            return false;
+        }
+
+        average = TimeSpan.FromTicks((long)durations.Average(static duration => (double)duration.Ticks));
+        return true;
+    }
+
+    private static TimeSpan Scale(TimeSpan duration, int count)
+    {
+        count = Math.Max(0, count);
+        return count > 0 && duration.Ticks > TimeSpan.MaxValue.Ticks / count
+            ? TimeSpan.MaxValue
+            : TimeSpan.FromTicks(duration.Ticks * count);
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        duration = duration < TimeSpan.Zero ? TimeSpan.Zero : duration;
+        return duration.TotalHours >= 1
+            ? $"{(int)duration.TotalHours}:{duration.Minutes:00}:{duration.Seconds:00}"
+            : $"{(int)duration.TotalMinutes}:{duration.Seconds:00}";
     }
 
     private void ShowCompletionMessage(BatchProgressSnapshot snapshot)

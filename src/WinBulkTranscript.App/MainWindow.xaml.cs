@@ -1,6 +1,7 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Graphics;
 using WinBulkTranscript.App.ViewModels;
 
 namespace WinBulkTranscript.App;
@@ -19,6 +20,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
 
         Title = "Bulk Transcript";
+        AppWindow.Resize(new SizeInt32(1180, 760));
         RootPage.Initialize(_viewModel);
         AppWindow.Closing += OnAppWindowClosing;
         _viewModel.BatchFinished += OnBatchFinished;

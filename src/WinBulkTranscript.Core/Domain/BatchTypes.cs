@@ -69,6 +69,8 @@ public sealed record BatchProgressSnapshot(
     ProcessingStage CurrentStage,
     string StageText,
     double CurrentFileProgress,
+    int CurrentChunkIndex,
+    int CurrentChunkCount,
     bool IsRunning,
     bool IsCancelling,
     string? FatalError);

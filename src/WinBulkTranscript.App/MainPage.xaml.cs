@@ -8,11 +8,15 @@ namespace WinBulkTranscript.App;
 /// <summary>Thin view responsible for AppWindow-aware folder pickers.</summary>
 public sealed partial class MainPage : Page
 {
+    private readonly DispatcherTimer _timingTimer;
     private MainViewModel? _viewModel;
 
     public MainPage()
     {
         InitializeComponent();
+        _timingTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _timingTimer.Tick += (_, _) => _viewModel?.RefreshTimingDisplay();
+        _timingTimer.Start();
     }
 
     /// <summary>Connects the page to its view model after the window has been composed.</summary>

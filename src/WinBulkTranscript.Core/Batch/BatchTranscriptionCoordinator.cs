@@ -276,6 +276,8 @@ public sealed class BatchTranscriptionCoordinator
             job.Start();
             state.CurrentFileName = job.Item.FileName;
             state.CurrentFileProgress = 0;
+            state.CurrentChunkIndex = 0;
+            state.CurrentChunkCount = 0;
             SetStageCore(job, state, ProcessingStage.ExtractingAudio, "Extracting audio", 0, reporter, force: true);
         }
 
@@ -303,6 +305,11 @@ public sealed class BatchTranscriptionCoordinator
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var interval = orderedIntervals[index];
+                    lock (state.SyncRoot)
+                    {
+                        state.CurrentChunkIndex = index + 1;
+                        state.CurrentChunkCount = orderedIntervals.Count;
+                    }
                     SetStage(
                         job,
                         state,
@@ -665,6 +672,8 @@ public sealed class BatchTranscriptionCoordinator
         public ProcessingStage CurrentStage { get; set; } = ProcessingStage.None;
         public string StageText { get; set; } = string.Empty;
         public double CurrentFileProgress { get; set; }
+        public int CurrentChunkIndex { get; set; }
+        public int CurrentChunkCount { get; set; }
         public string? FatalError { get; set; }
     }
 
@@ -707,6 +716,8 @@ public sealed class BatchTranscriptionCoordinator
                 _state.CurrentStage,
                 _state.StageText,
                 _state.CurrentFileProgress,
+                _state.CurrentChunkIndex,
+                _state.CurrentChunkCount,
                 _state.IsRunning,
                 _state.IsCancelling,
                 _state.FatalError));

@@ -36,6 +36,11 @@ public sealed class BatchTranscriptionCoordinatorTests
         Assert.Equal(1, model.DisposeCount);
         Assert.Equal(2, extractor.CleanupCount);
         Assert.Equal(1, tracker.MaximumConcurrent);
+        Assert.Contains(
+            snapshots.Values,
+            snapshot => snapshot.CurrentStage == ProcessingStage.Transcribing
+                && snapshot.CurrentChunkIndex == 1
+                && snapshot.CurrentChunkCount == 1);
 
         var final = GetFinalSnapshot(snapshots);
         Assert.False(final.IsRunning);
