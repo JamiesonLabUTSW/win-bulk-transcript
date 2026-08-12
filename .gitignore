@@ -13,6 +13,15 @@ artifacts/
 *.pfx
 *.p12
 *.snk
-test-assets/synthetic/
-test-assets/phase0-known-en.pcm
-test-assets/phase0-known-en.pcm.json
+*.pem
+*.key
+*.jks
+*.keystore
+secrets.json
+secrets.*.json
+appsettings.Local.json
+appsettings.Development.json
+
+# Generated test media and fixture output; retain only repository documentation.
+test-assets/*
+!test-assets/*.md
