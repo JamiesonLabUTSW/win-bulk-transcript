@@ -2,7 +2,7 @@
 
 ## Run the application
 
-For developer launch, local self-contained publish, first-run model behavior, and everyday batch use, see the repository [run guide](../README.md).
+For downloading a release, extracting it, navigating SmartScreen, and completing a first transcription, see the [Windows quickstart](quickstart.md). For developer launch and local self-contained publishing, see the repository [README](../README.md).
 
 Research snapshot: 2026-08-06.
 
