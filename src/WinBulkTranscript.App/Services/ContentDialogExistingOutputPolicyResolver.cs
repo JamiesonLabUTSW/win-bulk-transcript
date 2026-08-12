@@ -11,12 +11,17 @@ public sealed class ContentDialogExistingOutputPolicyResolver : IExistingOutputP
 {
     private readonly Func<XamlRoot?> _xamlRootProvider;
     private readonly IUiDispatcher _dispatcher;
+    private readonly ModalDialogCoordinator _dialogs;
 
     /// <summary>Initializes the resolver with the current window root and dispatcher.</summary>
-    public ContentDialogExistingOutputPolicyResolver(Func<XamlRoot?> xamlRootProvider, IUiDispatcher dispatcher)
+    public ContentDialogExistingOutputPolicyResolver(
+        Func<XamlRoot?> xamlRootProvider,
+        IUiDispatcher dispatcher,
+        ModalDialogCoordinator dialogs)
     {
         _xamlRootProvider = xamlRootProvider ?? throw new ArgumentNullException(nameof(xamlRootProvider));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
     }
 
     /// <inheritdoc />
@@ -72,20 +77,7 @@ public sealed class ContentDialogExistingOutputPolicyResolver : IExistingOutputP
         };
         AutomationProperties.SetName(dialog, "Existing transcript files");
 
-        var showOperation = dialog.ShowAsync();
-        using var cancellationRegistration = cancellationToken.Register(() =>
-        {
-            if (_dispatcher.HasThreadAccess)
-            {
-                TryHide(dialog);
-            }
-            else
-            {
-                _dispatcher.TryEnqueue(() => TryHide(dialog));
-            }
-        });
-
-        var result = await showOperation;
+        var result = await _dialogs.ShowAsync(dialog, cancellationToken: cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         return result switch
         {
@@ -95,15 +87,4 @@ public sealed class ContentDialogExistingOutputPolicyResolver : IExistingOutputP
         };
     }
 
-    private static void TryHide(ContentDialog dialog)
-    {
-        try
-        {
-            dialog.Hide();
-        }
-        catch (InvalidOperationException)
-        {
-            // The dialog may already have been dismissed by its user action.
-        }
-    }
 }

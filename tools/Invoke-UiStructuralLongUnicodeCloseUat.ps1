@@ -85,6 +85,35 @@ function Get-UiaValue {
     return [string]$Element.GetCurrentPropertyValue([System.Windows.Automation.ValuePattern]::ValueProperty)
 }
 
+function Select-UiaTab {
+    param([System.Windows.Automation.AutomationElement]$Tab)
+
+    $candidate = $Tab
+    foreach ($level in 0..4) {
+        $pattern = $null
+        if ($candidate.TryGetCurrentPattern(
+                [System.Windows.Automation.SelectionItemPattern]::Pattern,
+                [ref]$pattern)) {
+            ([System.Windows.Automation.SelectionItemPattern]$pattern).Select()
+            return
+        }
+
+        if ($candidate.TryGetCurrentPattern(
+                [System.Windows.Automation.InvokePattern]::Pattern,
+                [ref]$pattern)) {
+            ([System.Windows.Automation.InvokePattern]$pattern).Invoke()
+            return
+        }
+
+        $candidate = [System.Windows.Automation.TreeWalker]::ControlViewWalker.GetParent($candidate)
+        if ($null -eq $candidate) {
+            break
+        }
+    }
+
+    throw "The '$($Tab.Current.Name)' tab does not expose a selection or invoke pattern."
+}
+
 function Add-ProbeStep {
     param(
         [Parameter(Mandatory)]
@@ -196,6 +225,11 @@ $result = [ordered]@{
     paths = [ordered]@{}
     environment = [ordered]@{}
     assertions = [ordered]@{
+        startupAcknowledgementAccepted = $false
+        startupLegalDocumentsOpened = $false
+        startupLegalDocumentsAccessible = $false
+        setupLicenseFocusRestored = $false
+        batchLicenseDismissedForClose = $false
         longUnicodeInputPath = $false
         longUnicodeOutputPath = $false
         pickerSelectedBothFolders = $false
@@ -266,15 +300,70 @@ try {
     }
     Add-ProbeStep -Steps $steps -Name 'PublishedAppLaunched' -Data $result.environment
 
+    Wait-Until -Description 'the academic research acknowledgement' -Condition {
+        return $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Academic Research Use Acknowledgement')
+    }
+    $acknowledgement = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Academic Research Use Acknowledgement'
+    $viewLegal = Find-UiaElement -Root $acknowledgement -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'View License'
+    if ($null -eq $viewLegal) {
+        throw 'The startup acknowledgement did not expose its legal-information action.'
+    }
+    ([System.Windows.Automation.InvokePattern]$viewLegal.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+    Wait-Until -Description 'both legal document tabs' -Condition {
+        return $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Application License') -and
+            $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Third-Party Notices')
+    }
+    $result.assertions.startupLegalDocumentsOpened = $true
+    $applicationLicenseTab = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Application License'
+    $thirdPartyTab = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Third-Party Notices'
+    Select-UiaTab -Tab $thirdPartyTab
+    Wait-Until -Description 'the selectable third-party document text' -Condition {
+        return $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Third-Party Notices document text')
+    }
+    Select-UiaTab -Tab $applicationLicenseTab
+    Wait-Until -Description 'the selectable application-license document text' -Condition {
+        return $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Application License document text')
+    }
+    $result.assertions.startupLegalDocumentsAccessible = $true
+    $backToAcknowledgement = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Back to Acknowledgement'
+    ([System.Windows.Automation.InvokePattern]$backToAcknowledgement.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+    Wait-Until -Description 'the acknowledgement actions after returning from legal information' -Condition {
+        return $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Accept and Continue')
+    }
+    $acknowledgement = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Academic Research Use Acknowledgement'
+    $acceptAndContinue = Find-UiaElement -Root $acknowledgement -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Accept and Continue'
+    if ($null -eq $acceptAndContinue) {
+        throw 'The startup acknowledgement did not expose its Accept and Continue action.'
+    }
+    ([System.Windows.Automation.InvokePattern]$acceptAndContinue.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+    Wait-Until -Description 'the acknowledgement to close after acceptance' -Condition {
+        return $null -eq (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Academic Research Use Acknowledgement')
+    }
+    $result.assertions.startupAcknowledgementAccepted = $true
+    Add-ProbeStep -Steps $steps -Name 'StartupAcknowledgementAccepted'
+
     $inputTextBox = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) -Value 'InputFolderTextBox'
     $browseInput = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) -Value 'BrowseInputButton'
     $outputTextBox = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) -Value 'OutputFolderTextBox'
     $browseOutput = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) -Value 'BrowseOutputButton'
     $startButton = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) -Value 'StartButton'
     $cancelButton = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) -Value 'CancelButton'
-    if ($null -in @($inputTextBox, $browseInput, $outputTextBox, $browseOutput, $startButton, $cancelButton)) {
+    $licenseButton = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) -Value 'LicenseButton'
+    if ($null -in @($inputTextBox, $browseInput, $outputTextBox, $browseOutput, $startButton, $cancelButton, $licenseButton)) {
         throw 'The published app did not expose all required named controls through UI Automation.'
     }
+
+    ([System.Windows.Automation.InvokePattern]$licenseButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+    Wait-Until -Description 'legal information from the Setup card' -Condition {
+        return $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'License and Third-Party Notices')
+    }
+    $setupLegalDialog = Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'License and Third-Party Notices'
+    $closeLegal = Find-UiaElement -Root $setupLegalDialog -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'Close'
+    ([System.Windows.Automation.InvokePattern]$closeLegal.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+    Wait-Until -Description 'focus to return to the Setup License link' -Condition {
+        return $licenseButton.Current.HasKeyboardFocus
+    }
+    $result.assertions.setupLicenseFocusRestored = $true
 
     function Select-FolderThroughStandardPicker {
         param(
@@ -335,6 +424,10 @@ try {
         startEnabled = $startButton.Current.IsEnabled
     })
 
+    ([System.Windows.Automation.InvokePattern]$licenseButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+    Wait-Until -Description 'legal information while the batch is active' -Condition {
+        return $null -ne (Find-UiaElement -Root $appRoot -Property ([System.Windows.Automation.AutomationElement]::NameProperty) -Value 'License and Third-Party Notices')
+    }
     $window = [System.Windows.Automation.WindowPattern]$appRoot.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern)
     $window.Close()
     Wait-Until -Description 'the first close confirmation dialog' -Condition {
@@ -346,6 +439,7 @@ try {
         throw 'The close confirmation did not expose its Keep working action.'
     }
     $result.assertions.closeConfirmationObserved = $true
+    $result.assertions.batchLicenseDismissedForClose = $true
     Add-ProbeStep -Steps $steps -Name 'CloseConfirmationObserved' -Data ([ordered]@{
         title = $closeDialog.Current.Name
         keepWorkingName = $keepWorking.Current.Name

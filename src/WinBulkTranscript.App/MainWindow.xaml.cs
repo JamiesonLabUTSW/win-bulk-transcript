@@ -2,6 +2,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Graphics;
+using WinBulkTranscript.App.Services;
 using WinBulkTranscript.App.ViewModels;
 
 namespace WinBulkTranscript.App;
@@ -10,18 +11,25 @@ namespace WinBulkTranscript.App;
 public sealed partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
+    private readonly ModalDialogCoordinator _dialogs;
+    private readonly LegalDialogController _legalDialogs;
     private bool _allowClose;
+    private bool _startupAccepted;
     private bool _closeAfterCancellation;
     private bool _closeDialogOpen;
 
-    public MainWindow(MainViewModel viewModel)
+    public MainWindow(MainViewModel viewModel, ModalDialogCoordinator dialogs)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         InitializeComponent();
+        _legalDialogs = new LegalDialogController(LegalInformationOverlay, RootPage, _dialogs);
 
         Title = "WinBulkTranscript by Jamieson Lab";
         AppWindow.Resize(new SizeInt32(1180, 760));
-        RootPage.Initialize(_viewModel);
+        RootPage.IsEnabled = false;
+        RootPage.Initialize(_viewModel, _legalDialogs);
+        RootPage.Loaded += OnRootPageLoaded;
         AppWindow.Closing += OnAppWindowClosing;
         _viewModel.BatchFinished += OnBatchFinished;
     }
@@ -29,9 +37,32 @@ public sealed partial class MainWindow : Window
     /// <summary>Gets the page's Xaml root for picker and dialog integration.</summary>
     public XamlRoot? ContentXamlRoot => (Content as FrameworkElement)?.XamlRoot;
 
+    private async void OnRootPageLoaded(object sender, RoutedEventArgs args)
+    {
+        RootPage.Loaded -= OnRootPageLoaded;
+        try
+        {
+            _startupAccepted = await _legalDialogs.ShowStartupAcknowledgementAsync();
+        }
+        catch
+        {
+            _startupAccepted = false;
+        }
+
+        if (!_startupAccepted)
+        {
+            _allowClose = true;
+            Close();
+            return;
+        }
+
+        RootPage.IsEnabled = true;
+        RootPage.RestoreFocusAfterBatch();
+    }
+
     private async void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
-        if (_allowClose || !_viewModel.IsRunning)
+        if (_allowClose || !_startupAccepted || !_viewModel.IsRunning)
         {
             return;
         }
@@ -45,6 +76,7 @@ public sealed partial class MainWindow : Window
         _closeDialogOpen = true;
         try
         {
+            _dialogs.DismissActiveDialog();
             var dialog = new ContentDialog
             {
                 XamlRoot = ContentXamlRoot,
@@ -55,7 +87,7 @@ public sealed partial class MainWindow : Window
                 DefaultButton = ContentDialogButton.Close,
             };
 
-            var result = await dialog.ShowAsync();
+            var result = await _dialogs.ShowAsync(dialog, highPriority: true);
             if (result == ContentDialogResult.Primary)
             {
                 _closeAfterCancellation = true;

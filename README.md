@@ -57,7 +57,7 @@ Use **Cancel** to stop a batch cooperatively and wait for cleanup to finish befo
 
 ## License and permitted use
 
-WinBulkTranscript is source-available software licensed for **academic research use only** under the [UT Southwestern academic research license](LICENSE). Commercial use or redistribution is prohibited, and any use or redistribution by a for-profit entity is treated as commercial use. The license does not grant patent rights. This restricted license is not an Open Source Initiative-approved open-source license.
+WinBulkTranscript is source-available software licensed for **academic research use only** under the [UT Southwestern academic research license](LICENSE). Any use or redistribution for commercial purposes is prohibited, and any use or redistribution by a for-profit entity is treated as commercial use. The license does not grant patent rights. This restricted license is not an Open Source Initiative-approved open-source license.
 
 Third-party packages, the .NET/Windows runtime payload, and the separately downloaded transcription model remain subject to their own license terms. Release artifacts include release-specific third-party, runtime, and model notices; see [Third-party licensing](docs/third-party-licenses.md) for the current dependency audit. Questions about permitted use or alternative licensing should be directed to the [UT Southwestern Office for Technology Development](https://www.utsouthwestern.edu/about-us/administrative-offices/technology-development/agreements/open-source-release-of-software.html) at technologydevelopment@utsouthwestern.edu.
 

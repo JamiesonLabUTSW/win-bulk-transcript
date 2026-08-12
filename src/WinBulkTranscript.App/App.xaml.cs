@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using WinBulkTranscript.App.Composition;
+using WinBulkTranscript.App.Services;
 
 namespace WinBulkTranscript.App;
 
@@ -18,7 +19,10 @@ public partial class App : Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var composition = new AppComposition();
-        MainWindow = new MainWindow(composition.CreateMainViewModel(() => MainWindow?.ContentXamlRoot));
+        var dialogs = new ModalDialogCoordinator();
+        MainWindow = new MainWindow(
+            composition.CreateMainViewModel(() => MainWindow?.ContentXamlRoot, dialogs),
+            dialogs);
         MainWindow.Activate();
     }
 }

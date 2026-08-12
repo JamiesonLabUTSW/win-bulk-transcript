@@ -51,13 +51,19 @@ public sealed class AppComposition
     }
 
     /// <summary>Creates the window's main view model on the UI thread.</summary>
-    public MainViewModel CreateMainViewModel(Func<XamlRoot?> xamlRootProvider)
+    public MainViewModel CreateMainViewModel(
+        Func<XamlRoot?> xamlRootProvider,
+        ModalDialogCoordinator dialogCoordinator)
     {
         ArgumentNullException.ThrowIfNull(xamlRootProvider);
+        ArgumentNullException.ThrowIfNull(dialogCoordinator);
         var dispatcherQueue = DispatcherQueue.GetForCurrentThread()
             ?? throw new InvalidOperationException("The main view model must be created on the UI thread.");
         var dispatcher = new DispatcherQueueUiDispatcher(dispatcherQueue);
-        var collisionResolver = new ContentDialogExistingOutputPolicyResolver(xamlRootProvider, dispatcher);
+        var collisionResolver = new ContentDialogExistingOutputPolicyResolver(
+            xamlRootProvider,
+            dispatcher,
+            dialogCoordinator);
         return new MainViewModel(_batchRunner, collisionResolver, dispatcher);
     }
 }

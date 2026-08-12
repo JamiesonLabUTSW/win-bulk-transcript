@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Storage.Pickers;
+using WinBulkTranscript.App.Services;
 using WinBulkTranscript.App.ViewModels;
 
 namespace WinBulkTranscript.App;
@@ -10,6 +11,7 @@ public sealed partial class MainPage : Page
 {
     private readonly DispatcherTimer _timingTimer;
     private MainViewModel? _viewModel;
+    private LegalDialogController? _legalDialogs;
 
     public MainPage()
     {
@@ -20,9 +22,10 @@ public sealed partial class MainPage : Page
     }
 
     /// <summary>Connects the page to its view model after the window has been composed.</summary>
-    public void Initialize(MainViewModel viewModel)
+    public void Initialize(MainViewModel viewModel, LegalDialogController legalDialogs)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _legalDialogs = legalDialogs ?? throw new ArgumentNullException(nameof(legalDialogs));
         DataContext = _viewModel;
     }
 
@@ -51,6 +54,23 @@ public sealed partial class MainPage : Page
     {
         await PickFolderAsync(isInput: false);
         BrowseOutputButton.Focus(FocusState.Programmatic);
+    }
+
+    private async void LicenseButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_legalDialogs is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _legalDialogs.ShowLegalInformationAsync();
+        }
+        finally
+        {
+            LicenseButton.Focus(FocusState.Programmatic);
+        }
     }
 
     private async Task PickFolderAsync(bool isInput)

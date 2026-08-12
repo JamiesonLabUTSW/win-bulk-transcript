@@ -25,6 +25,9 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" />
     <PackageReference Include="Microsoft.AI.Foundry.Local" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\LICENSE" LogicalName="WinBulkTranscript.App.Embedded.LICENSE" />
+  </ItemGroup>
 
   <!--
     The WinUI build produces the app resource PRI beside the architecture-specific apphost, but
