@@ -41,8 +41,10 @@ jobs:
           }
 
           $version = $tagMatch.Groups['version'].Value
+          $majorVersion = [int]($version.Split('.')[0])
+          $isPrerelease = $majorVersion -eq 0 -or $version.Contains('-')
           "version=$version" >> $env:GITHUB_OUTPUT
-          "prerelease=$($version.Contains('-').ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "prerelease=$($isPrerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
       - name: Require the tagged commit on the default branch
         shell: pwsh

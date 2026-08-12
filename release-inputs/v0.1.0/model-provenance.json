@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "releasePolicy": "preview",
+  "modelVariant": "nemotron-speech-streaming-en-0.6b-generic-cpu:3",
+  "artifactIdentifier": "azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b-generic-cpu/versions/3",
+  "sourceUri": "https://ai.azure.com/catalog/models/nemotron-speech-streaming-en-0.6b-generic-cpu",
+  "licenseFileName": "model-license.txt",
+  "licenseSha256": "e4d0f1f0a714d11785fc860c7ac40254152a298a7cbc18dde152b1262650a246",
+  "packaging": "The model is downloaded separately by Foundry Local and is not embedded in the WinBulkTranscript release archives."
+}

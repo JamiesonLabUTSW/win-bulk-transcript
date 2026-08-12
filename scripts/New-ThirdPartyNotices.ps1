@@ -16,6 +16,9 @@ param(
     [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
     [string]$RuntimeFrameworkNoticesPath,
 
+    [ValidateSet('preview', 'supported')]
+    [string]$ReleasePolicy = 'supported',
+
     [Parameter(Mandatory)]
     [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
     [string]$PublishedDepsPath,
@@ -294,7 +297,7 @@ function Get-LicenseDescriptor {
         elseif ($licenseValue -eq 'MIT') {
             $packageCopyright = [string]$metadata.copyright
             if ([string]::IsNullOrWhiteSpace($packageCopyright)) {
-                throw "Package '$PackageId' version '$PackageVersion' uses the MIT expression but has neither an embedded license file nor package copyright metadata. Exact attribution must be reviewed before release."
+                throw "Package '$PackageId' version '$PackageVersion' uses the MIT expression but has neither an embedded license file nor package copyright metadata. Publishing would omit required attribution."
             }
             $licenseText = Get-MitLicenseText -Copyright $packageCopyright
             $licenseSource += '; canonical full text supplied by notice generator'
@@ -881,9 +884,15 @@ $lines.Add("Model provenance file: $modelProvenanceFileName")
 $lines.Add("Model provenance SHA-256: $modelProvenanceSha256")
 $lines.Add("Runtime/framework notices file: $runtimeFrameworkNoticesFileName")
 $lines.Add("Runtime/framework notices SHA-256: $runtimeFrameworkNoticesSha256")
+$lines.Add("Release policy: $ReleasePolicy")
 $lines.Add('')
 $lines.Add('This release-specific file was generated from the actual package libraries declared by the staged .deps.json and cross-checked against the staged payload inventory. Only those actual package libraries appear below; the lock file is not treated as an inventory of every file in the release.')
-$lines.Add('Lock-backed package libraries are verified against the App lock and the restored package SHA-512. Self-contained runtime/framework payload is separately recorded from the staged runtime configuration and any non-lock runtime packages. Retain this file with the matching publish artifact and complete legal review before distribution.')
+if ($ReleasePolicy -ceq 'preview') {
+    $lines.Add('Lock-backed package libraries are verified against the App lock and restored package SHA-512. The self-contained runtime/framework payload is recorded from the staged runtime configuration and non-lock runtime packages. This version-zero notice is a preview disclosure tied to the matching artifact.')
+}
+else {
+    $lines.Add('Lock-backed package libraries are verified against the App lock and restored package SHA-512. The self-contained runtime/framework payload is recorded from the staged runtime configuration and non-lock runtime packages. Retain this file with the matching publish artifact and complete the supported-release review before distribution.')
+}
 $lines.Add('')
 $lines.Add('## Lock-backed package libraries in the actual payload')
 $lines.Add('')
@@ -920,7 +929,12 @@ if ($runtimePackageEntries.Count -gt 0) {
 }
 
 $lines.Add('')
-$lines.Add('The following runtime/framework notice text is a mandatory release input. Automation verifies that it names every declared framework and non-lock runtime package above, but it cannot establish whether the supplied legal text completely covers all runtime files. Legal review must make that determination before distribution.')
+if ($ReleasePolicy -ceq 'preview') {
+    $lines.Add('The following version-zero runtime/framework information is the disclosure supplied for this preview. Automation verifies that it names every declared framework and non-lock runtime package above.')
+}
+else {
+    $lines.Add('The following runtime/framework notice text is the reviewed input for this supported release. Automation verifies that it names every declared framework and non-lock runtime package above; the supported-release review determines legal completeness.')
+}
 $lines.Add('')
 $lines.Add('~~~text')
 $lines.Add($runtimeFrameworkNoticesText.TrimEnd())

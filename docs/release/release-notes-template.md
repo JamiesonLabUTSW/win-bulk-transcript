@@ -1,6 +1,7 @@
 # WinBulkTranscript release notes — `<version>`
 
 Release date: `<YYYY-MM-DD>`
+Release policy: `<preview for 0.x | supported for 1.x and later>`
 Architecture artifacts: `WinBulkTranscript-<version>-win-x64.zip`, `WinBulkTranscript-<version>-win-arm64.zip`
 Release evidence: `<links or retained paths to the completed architecture matrices and release records>`
 
@@ -20,6 +21,7 @@ The application downloads its configured local speech model on first use. A late
 
 - Exact configured model variant: `<model variant>`
 - Release source: `<v-prefixed release tag>`
+- Release policy: `<preview | supported>`
 - Matrix status: `<x64 Passed; ARM64 Passed>`
 - Model provenance input: `<file name and SHA-256>`
 - x64 runtime/framework notice input: `<file name and SHA-256>`
@@ -34,4 +36,4 @@ Version 1 remains a self-contained folder/ZIP deployment. A literal single-file 
 
 `<support contact, issue tracker, or distribution contact>`
 
-Before publishing, replace every placeholder, then compute this completed file's SHA-256 and put that filename/hash in each test matrix's `Release notes source` header. The publisher verifies that the notes name the requested version and exact ZIP artifact for each architecture and retain the unsigned SmartScreen warning.
+Before publishing, fill every template field, then compute this completed file's SHA-256 and put that filename/hash in each test matrix's `Release notes source` header. The publisher verifies that the notes name the requested version and exact ZIP artifact for each architecture and retain the unsigned SmartScreen warning.

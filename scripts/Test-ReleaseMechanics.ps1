@@ -79,6 +79,7 @@ foreach ($expected in @(
         'attestations: write',
         'artifact-metadata: write',
         'actions/attest@',
+        "`$majorVersion -eq 0 -or `$version.Contains('-')",
         'merge-base --is-ancestor',
         'gh release create',
         '--verify-tag',

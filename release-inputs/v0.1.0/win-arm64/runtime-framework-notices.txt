@@ -1,0 +1,16 @@
+WinBulkTranscript 0.1.0 ARM64 runtime/framework information
+
+Release version: 0.1.0
+Architecture: arm64
+Declared framework: Microsoft.NETCore.App 10.0.11
+Non-lock runtime packages: none
+
+The retained ARM64 raw publish used for this record is artifacts/publish-smoke/20260811-final2-win-arm64.
+- WinBulkTranscript.deps.json SHA-256: 43325d17d6eae3b10fd1554af91a4c3fd7b003aea27cb9b0375556a8ee4d459b
+- WinBulkTranscript.runtimeconfig.json SHA-256: 7be83462bd4743e27bdcbfc68c33a7a0b349f834a60a20527875ab7a9bd2a6bc
+
+Runtime terms and notices:
+- .NET Runtime 10.0.11 license: https://github.com/dotnet/runtime/blob/v10.0.11/LICENSE.TXT
+- .NET Runtime 10.0.11 third-party notices: https://github.com/dotnet/runtime/blob/v10.0.11/THIRD-PARTY-NOTICES.TXT
+
+The release publisher checks this framework declaration against the staged ARM64 runtime configuration and dependency manifest and records the resulting payload inventory in the archive.
