@@ -3,11 +3,11 @@
 Status: **Draft - no ARM64 execution acceptance has been recorded.**
 
 Release version: `0.1.0`
-Release date: `TBD`
+Release date: `2026-08-12`
 Release Foundry model variant: `nemotron-speech-streaming-en-0.6b-generic-cpu:3`
 Release source: `v0.1.0`
 Release policy: `preview`
-Preview risk acceptance: `TBD - replace with Approver: <name>; Date: <YYYY-MM-DD>; Decision: <explicit decision>`
+Preview risk acceptance: `Approver: Mike Holcomb; Date: 2026-08-12; Decision: Approve the documented v0.1.0 ARM64 preview limitations and Accepted risk rows.`
 Release notes source: `release-notes.md sha256:TBD-after-finalization`
 Model provenance source: `model-provenance.json sha256:TBD-after-legal-review`
 Runtime framework notices source: `runtime-framework-notices.txt sha256:TBD-after-legal-review`

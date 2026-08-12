@@ -2,7 +2,7 @@
 
 Status: **Draft preview dossier - not yet approved for release.**
 
-This directory prepares the required shape and records facts already supported by repository evidence. Version 0.1.0 uses the preview policy: technical validation gaps may be accepted explicitly, while final licensing/provenance, source binding, checksums, and artifact verification remain mandatory. This draft is not ready to tag or distribute until its remaining mandatory inputs and risk-acceptance headers are finalized.
+This directory prepares the required shape and records facts already supported by repository evidence. Version 0.1.0 uses the preview policy: technical validation gaps may be accepted explicitly, while final licensing/provenance, source binding, checksums, and artifact verification remain mandatory. Mike Holcomb accepted the documented x64 and ARM64 preview limitations on 2026-08-12. This draft is not ready to tag or distribute until its remaining mandatory inputs are finalized.
 
 ## Prefilled facts
 
@@ -18,8 +18,8 @@ This directory prepares the required shape and records facts already supported b
 - Obtain legal approval for the exact model license/notices and replace `model-license.txt` in full.
 - Confirm an immutable provenance source for the exact Foundry catalog artifact, then finalize `model-provenance.json`.
 - Replace the draft runtime/framework notice sections with legally reviewed text based on fresh preliminary publishes from the tagged source candidate.
-- For clean-machine, Mark-of-the-Web/SmartScreen, online/offline, manual UI, resilience, representative-acoustic, and ARM64 execution gaps: either complete the gate or document and explicitly accept the preview risk in each matrix.
-- Resolve the final release date and support contact.
+- The clean-machine, Mark-of-the-Web/SmartScreen, online/offline, manual UI, resilience, representative-acoustic, and ARM64 execution gaps are documented and explicitly accepted for this preview in each matrix. Any material change to those limitations requires renewed acceptance.
+- Confirm the draft repository-issues support contact or replace it with the final support channel.
 
 ## Finalization order
 

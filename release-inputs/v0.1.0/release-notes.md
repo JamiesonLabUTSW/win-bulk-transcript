@@ -1,6 +1,6 @@
 # WinBulkTranscript release notes - 0.1.0 (DRAFT)
 
-Release date: `TBD`
+Release date: `2026-08-12`
 Release policy: `preview`
 Architecture artifacts: `WinBulkTranscript-0.1.0-win-x64.zip`, `WinBulkTranscript-0.1.0-win-arm64.zip`
 Release evidence: draft matrices in `release-inputs/v0.1.0/win-x64/` and `release-inputs/v0.1.0/win-arm64/`; final release records will be attached to the GitHub Release.
@@ -26,7 +26,7 @@ The application downloads its configured local speech model on first use. A late
 - Exact configured model variant: `nemotron-speech-streaming-en-0.6b-generic-cpu:3`
 - Release source: `v0.1.0`
 - Release policy: `preview`
-- Matrix status: `preview exceptions drafted for x64 and ARM64; explicit risk acceptance pending`
+- Matrix status: `documented x64 and ARM64 preview limitations accepted by Mike Holcomb on 2026-08-12; mandatory release inputs remain pending`
 - Model provenance input: `model-provenance.json` - SHA-256 `TBD after finalization`
 - x64 runtime/framework notice input: `win-x64/runtime-framework-notices.txt` - SHA-256 `TBD after legal review`
 - ARM64 runtime/framework notice input: `win-arm64/runtime-framework-notices.txt` - SHA-256 `TBD after legal review`
