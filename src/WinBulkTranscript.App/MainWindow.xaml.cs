@@ -19,7 +19,7 @@ public sealed partial class MainWindow : Window
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
 
-        Title = "Bulk Transcript";
+        Title = "WinBulkTranscript by Jamieson Lab";
         AppWindow.Resize(new SizeInt32(1180, 760));
         RootPage.Initialize(_viewModel);
         AppWindow.Closing += OnAppWindowClosing;

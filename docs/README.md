@@ -1,4 +1,4 @@
-# Win Bulk Transcript planning index
+# WinBulkTranscript planning index
 
 ## Run the application
 

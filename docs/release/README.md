@@ -44,7 +44,7 @@ For each architecture, the publisher snapshots the test matrix, App package lock
 
 The folder and ZIP include:
 
-- `PACKAGE-LOCK.json`, `MODEL-LICENSE.txt`, `MODEL-PROVENANCE.json`, `DOTNET-RUNTIME-NOTICES.txt`, `RELEASE-NOTES.md`, `RELEASE-TEST-MATRIX.md`, `PUBLISH-PAYLOAD.json`, `THIRD-PARTY-NOTICES.md`, and `RELEASE-METADATA.json`.
+- `LICENSE` (the WinBulkTranscript project license), `PACKAGE-LOCK.json`, `MODEL-LICENSE.txt`, `MODEL-PROVENANCE.json`, `DOTNET-RUNTIME-NOTICES.txt`, `RELEASE-NOTES.md`, `RELEASE-TEST-MATRIX.md`, `PUBLISH-PAYLOAD.json`, `THIRD-PARTY-NOTICES.md`, and `RELEASE-METADATA.json`.
 
 The artifact root also receives:
 

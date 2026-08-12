@@ -165,6 +165,52 @@ function ConvertTo-MarkdownCell {
     return $Value.Replace('|', '\|').Replace([Environment]::CarriageReturn, ' ').Replace([Environment]::LineFeed, ' ').Trim()
 }
 
+function Get-MitLicenseText {
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Copyright
+    )
+
+    return @'
+MIT License
+
+Copyright (c) __PACKAGE_COPYRIGHT__
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+'@.Replace('__PACKAGE_COPYRIGHT__', $Copyright.Trim())
+}
+
+function Get-PackageLegalFiles {
+    param(
+        [Parameter(Mandatory)]
+        [string]$PackageDirectory
+    )
+
+    $files = Get-ChildItem -LiteralPath $PackageDirectory -Recurse -File | Where-Object {
+        $_.Name -match '^(LICENSE|LICENCE)(\..+)?$' -or
+        $_.Name -match '^(NOTICE|THIRD[-_. ]?PARTY[-_. ]?NOTICES?)(\..+)?$'
+    }
+
+    return @($files | Sort-Object FullName -Unique)
+}
+
 function Get-LicenseDescriptor {
     param(
         [Parameter(Mandatory)]
@@ -225,6 +271,8 @@ function Get-LicenseDescriptor {
     $licenseUrl = [string]$metadata.licenseUrl
     $licenseText = $null
     $licenseSource = $null
+    $licensePath = $null
+    $legalFiles = @(Get-PackageLegalFiles -PackageDirectory $packageDirectory)
 
     if ($licenseType -eq 'file' -and -not [string]::IsNullOrWhiteSpace($licenseValue)) {
         $licensePath = Join-Path $packageDirectory $licenseValue
@@ -237,12 +285,47 @@ function Get-LicenseDescriptor {
     }
     elseif ($licenseType -eq 'expression' -and -not [string]::IsNullOrWhiteSpace($licenseValue)) {
         $licenseSource = "SPDX expression: $licenseValue"
+        $embeddedLicense = $legalFiles | Where-Object { $_.Name -match '^(LICENSE|LICENCE)(\..+)?$' } | Select-Object -First 1
+        if ($null -ne $embeddedLicense) {
+            $licensePath = $embeddedLicense.FullName
+            $licenseText = Get-Content -LiteralPath $licensePath -Raw
+            $licenseSource += "; embedded file: $([IO.Path]::GetRelativePath($packageDirectory, $licensePath))"
+        }
+        elseif ($licenseValue -eq 'MIT') {
+            $packageCopyright = [string]$metadata.copyright
+            if ([string]::IsNullOrWhiteSpace($packageCopyright)) {
+                throw "Package '$PackageId' version '$PackageVersion' uses the MIT expression but has neither an embedded license file nor package copyright metadata. Exact attribution must be reviewed before release."
+            }
+            $licenseText = Get-MitLicenseText -Copyright $packageCopyright
+            $licenseSource += '; canonical full text supplied by notice generator'
+        }
+        else {
+            throw "Package '$PackageId' version '$PackageVersion' uses SPDX expression '$licenseValue' but contains no license file and the notice generator has no reviewed canonical text for that expression."
+        }
     }
     elseif (-not [string]::IsNullOrWhiteSpace($licenseUrl)) {
         $licenseSource = "license URL: $licenseUrl"
     }
     else {
         throw "Package '$PackageId' version '$PackageVersion' declares no license expression, file, or URL. Resolve this legal-review blocker before release."
+    }
+
+    $supplementalNotices = foreach ($legalFile in $legalFiles) {
+        if ($null -ne $licensePath -and [string]::Equals($legalFile.FullName, $licensePath, [StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
+
+        if ($legalFile.Name -notmatch '^(NOTICE|THIRD[-_. ]?PARTY[-_. ]?NOTICES?)(\..+)?$') {
+            continue
+        }
+
+        $noticeText = Get-Content -LiteralPath $legalFile.FullName -Raw
+        if (-not [string]::IsNullOrWhiteSpace($noticeText)) {
+            [PSCustomObject]@{
+                Path = [IO.Path]::GetRelativePath($packageDirectory, $legalFile.FullName)
+                Text = $noticeText
+            }
+        }
     }
 
     return [PSCustomObject]@{
@@ -252,6 +335,7 @@ function Get-LicenseDescriptor {
         Copyright     = [string]$metadata.copyright
         LicenseSource = $licenseSource
         LicenseText   = $licenseText
+        SupplementalNotices = @($supplementalNotices)
     }
 }
 
@@ -750,6 +834,7 @@ $licenseEntries = foreach ($package in $lockBackedPackages) {
         Copyright     = $descriptor.Copyright
         LicenseSource = $descriptor.LicenseSource
         LicenseText   = $descriptor.LicenseText
+        SupplementalNotices = @($descriptor.SupplementalNotices)
     }
 }
 
@@ -852,6 +937,22 @@ if ($embeddedLicenseEntries.Count -gt 0) {
         $lines.Add('~~~text')
         $lines.Add($entry.LicenseText.TrimEnd())
         $lines.Add('~~~')
+    }
+}
+
+$noticeEntries = @($licenseEntries | Where-Object { $_.SupplementalNotices.Count -gt 0 })
+if ($noticeEntries.Count -gt 0) {
+    $lines.Add('')
+    $lines.Add('## Package notices and third-party attribution files')
+    foreach ($entry in $noticeEntries) {
+        foreach ($notice in $entry.SupplementalNotices) {
+            $lines.Add('')
+            $lines.Add("### $($entry.Id) $($entry.Version) — $($notice.Path)")
+            $lines.Add('')
+            $lines.Add('~~~text')
+            $lines.Add($notice.Text.TrimEnd())
+            $lines.Add('~~~')
+        }
     }
 }
 

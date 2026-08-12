@@ -1,6 +1,6 @@
-# Win Bulk Transcript
+# WinBulkTranscript
 
-Win Bulk Transcript is a Windows 11 desktop application that recursively transcribes MP4 files into WebVTT (`.vtt`) files.
+WinBulkTranscript by Jamieson Lab is a Windows 11 desktop application that recursively transcribes MP4 files into WebVTT (`.vtt`) files.
 
 > **Development/UAT status:** local x64 implementation evidence is green, but this repository is not yet a supported release. See [UAT evidence status](docs/validation/uat-evidence-status.md) and the [release test matrix](docs/release/release-test-matrix.md).
 
@@ -54,6 +54,14 @@ Use **Cancel** to stop a batch cooperatively and wait for cleanup to finish befo
 - **First model load fails:** connect to the internet and retry. Cached-offline behavior is intended but is not yet release-validated on a clean machine.
 - **Existing transcript files:** choose the batch-wide collision policy in the dialog; do not force-kill the app while it is processing.
 - **Supported package:** do not treat `artifacts\publish-smoke` as a release. A final release ZIP does not exist yet; see the [release process](docs/release/README.md).
+
+## License and permitted use
+
+WinBulkTranscript is source-available software licensed for **academic research use only** under the [UT Southwestern academic research license](LICENSE). Commercial use or redistribution is prohibited, and any use or redistribution by a for-profit entity is treated as commercial use. The license does not grant patent rights. This restricted license is not an Open Source Initiative-approved open-source license.
+
+Third-party packages, the .NET/Windows runtime payload, and the separately downloaded transcription model remain subject to their own license terms. Release artifacts include release-specific third-party, runtime, and model notices; see [Third-party licensing](docs/third-party-licenses.md) for the current dependency audit. Questions about permitted use or alternative licensing should be directed to the [UT Southwestern Office for Technology Development](https://www.utsouthwestern.edu/about-us/administrative-offices/technology-development/agreements/open-source-release-of-software.html) at technologydevelopment@utsouthwestern.edu.
+
+Adding the required license notice does not itself authorize public release. UT Southwestern contributors must complete the institution's required disclosure and approval process before publishing this repository or a binary release.
 
 ## Related documentation
 

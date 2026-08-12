@@ -80,6 +80,9 @@ foreach ($expected in @(
         '$publisherScriptPath; Sha256 = $publisherScriptSha256',
         '$noticesGeneratorBytes = [IO.File]::ReadAllBytes($noticesGeneratorSourcePath)',
         '$noticesGeneratorSourcePath; Sha256 = $noticesGeneratorSha256',
+        '$projectLicenseBytes = [IO.File]::ReadAllBytes($projectLicensePath)',
+        '$projectLicensePath; Sha256 = $projectLicenseSha256',
+        '[IO.File]::WriteAllBytes($stagedProjectLicensePath, $projectLicenseBytes)',
         "Invoke-Dotnet -Arguments @('restore', `$project, '--locked-mode')",
         "restoreCommand = @('dotnet', 'restore', `$projectRecordPath, '--locked-mode')",
         'New-VerifiedScriptBlock -ScriptBytes $noticesGeneratorBytes',
@@ -90,6 +93,8 @@ foreach ($expected in @(
 
 Assert-ContainsText -Text $noticesGenerator -Expected '[string]$RepositoryRoot' -Description 'The notices generator'
 Assert-ContainsText -Text $noticesGenerator -Expected 'if ([string]::IsNullOrWhiteSpace($RepositoryRoot))' -Description 'The notices generator'
+Assert-ContainsText -Text $noticesGenerator -Expected 'Get-MitLicenseText -Copyright $packageCopyright' -Description 'The notices generator'
+Assert-ContainsText -Text $noticesGenerator -Expected 'SupplementalNotices = @($supplementalNotices)' -Description 'The notices generator'
 if ($publisher.IndexOf("Invoke-Dotnet -Arguments @('restore', `$project, '--runtime', `$rid, '--locked-mode')", [StringComparison]::Ordinal) -ge 0) {
     throw 'The release publisher must restore the project-declared dual-RID graph, not override it with one runtime identifier.'
 }

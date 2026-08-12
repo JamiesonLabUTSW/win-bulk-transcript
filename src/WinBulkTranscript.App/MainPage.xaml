@@ -18,7 +18,7 @@
             <StackPanel Spacing="2">
                 <TextBlock
                     Style="{StaticResource TitleTextBlockStyle}"
-                    Text="Bulk Transcript" />
+                    Text="WinBulkTranscript" />
                 <TextBlock
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Text="Turn a folder of MP4 files into WebVTT transcripts." />

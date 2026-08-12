@@ -935,6 +935,7 @@ $project = Join-Path $repositoryRoot 'src\WinBulkTranscript.App\WinBulkTranscrip
 $modelHostSourcePath = Join-Path $repositoryRoot 'src\WinBulkTranscript.App\Foundry\FoundryLocalModelHost.cs'
 $modelContractSourcePath = Join-Path $repositoryRoot 'src\WinBulkTranscript.App\Foundry\FoundryModelContract.cs'
 $packageLockPath = Join-Path $repositoryRoot 'src\WinBulkTranscript.App\packages.lock.json'
+$projectLicensePath = Join-Path $repositoryRoot 'LICENSE'
 $projectRecordPath = 'src/WinBulkTranscript.App/WinBulkTranscript.App.csproj'
 $modelHostRecordPath = 'src/WinBulkTranscript.App/Foundry/FoundryLocalModelHost.cs'
 $modelContractRecordPath = 'src/WinBulkTranscript.App/Foundry/FoundryModelContract.cs'
@@ -942,6 +943,7 @@ $packageLockRecordPath = 'src/WinBulkTranscript.App/packages.lock.json'
 $publisherScriptRecordPath = 'scripts/Publish-Release.ps1'
 $noticesGeneratorRecordPath = 'scripts/New-ThirdPartyNotices.ps1'
 $releaseOwnedRepositoryPaths = @(
+    'LICENSE',
     'Directory.Build.props',
     'Directory.Packages.props',
     'WinBulkTranscript.sln',
@@ -959,7 +961,7 @@ $releaseOwnedRepositoryPaths = @(
     'docs/release/THIRD-PARTY-NOTICES.md'
 )
 
-foreach ($requiredPath in @($publisherScriptPath, $noticesGeneratorSourcePath, $project, $modelHostSourcePath, $modelContractSourcePath, $packageLockPath)) {
+foreach ($requiredPath in @($publisherScriptPath, $noticesGeneratorSourcePath, $project, $modelHostSourcePath, $modelContractSourcePath, $packageLockPath, $projectLicensePath)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Required release input was not found: $requiredPath"
     }
@@ -1000,12 +1002,14 @@ $dotnetSdkVersion = Get-DotnetSdkVersion
 $publisherScriptBytes = [IO.File]::ReadAllBytes($publisherScriptPath)
 $noticesGeneratorBytes = [IO.File]::ReadAllBytes($noticesGeneratorSourcePath)
 $packageLockBytes = [IO.File]::ReadAllBytes($packageLockPath)
+$projectLicenseBytes = [IO.File]::ReadAllBytes($projectLicensePath)
 $releaseTestMatrixBytes = [IO.File]::ReadAllBytes($resolvedReleaseTestMatrixPath)
 $modelLicenseBytes = [IO.File]::ReadAllBytes($resolvedModelLicensePath)
 $modelProvenanceBytes = [IO.File]::ReadAllBytes($resolvedModelProvenancePath)
 $runtimeFrameworkNoticesBytes = [IO.File]::ReadAllBytes($resolvedRuntimeFrameworkNoticesPath)
 $releaseNotesBytes = [IO.File]::ReadAllBytes($resolvedReleaseNotesPath)
 $packageLockSha256 = Get-Sha256FromBytes -Bytes $packageLockBytes
+$projectLicenseSha256 = Get-Sha256FromBytes -Bytes $projectLicenseBytes
 $publisherScriptSha256 = Get-Sha256FromBytes -Bytes $publisherScriptBytes
 $noticesGeneratorSha256 = Get-Sha256FromBytes -Bytes $noticesGeneratorBytes
 $releaseTestMatrixSha256 = Get-Sha256FromBytes -Bytes $releaseTestMatrixBytes
@@ -1035,6 +1039,7 @@ $releaseInputSnapshots = @(
     [PSCustomObject]@{ Path = $publisherScriptPath; Sha256 = $publisherScriptSha256; Description = 'The release publisher source' },
     [PSCustomObject]@{ Path = $noticesGeneratorSourcePath; Sha256 = $noticesGeneratorSha256; Description = 'The third-party notices generator source' },
     [PSCustomObject]@{ Path = $packageLockPath; Sha256 = $packageLockSha256; Description = 'The App package lock' },
+    [PSCustomObject]@{ Path = $projectLicensePath; Sha256 = $projectLicenseSha256; Description = 'The project license' },
     [PSCustomObject]@{ Path = $modelContractSourcePath; Sha256 = $modelConfigurationSha256; Description = 'The configured release model contract source' },
     [PSCustomObject]@{ Path = $modelHostSourcePath; Sha256 = $modelHostConfigurationSha256; Description = 'The App model-host alias source' },
     [PSCustomObject]@{ Path = $resolvedReleaseTestMatrixPath; Sha256 = $releaseTestMatrixSha256; Description = 'The release test matrix input' },
@@ -1131,12 +1136,14 @@ try {
     }
 
     $stagedPackageLockPath = Join-Path $stagingPublishDirectory 'PACKAGE-LOCK.json'
+    $stagedProjectLicensePath = Join-Path $stagingPublishDirectory 'LICENSE'
     $stagedReleaseMatrixPath = Join-Path $stagingPublishDirectory 'RELEASE-TEST-MATRIX.md'
     $stagedModelLicensePath = Join-Path $stagingPublishDirectory 'MODEL-LICENSE.txt'
     $stagedModelProvenancePath = Join-Path $stagingPublishDirectory 'MODEL-PROVENANCE.json'
     $stagedRuntimeFrameworkNoticesPath = Join-Path $stagingPublishDirectory 'DOTNET-RUNTIME-NOTICES.txt'
     $stagedReleaseNotesPath = Join-Path $stagingPublishDirectory 'RELEASE-NOTES.md'
     [IO.File]::WriteAllBytes($stagedPackageLockPath, $packageLockBytes)
+    [IO.File]::WriteAllBytes($stagedProjectLicensePath, $projectLicenseBytes)
     [IO.File]::WriteAllBytes($stagedReleaseMatrixPath, $releaseTestMatrixBytes)
     [IO.File]::WriteAllBytes($stagedModelLicensePath, $modelLicenseBytes)
     [IO.File]::WriteAllBytes($stagedModelProvenancePath, $modelProvenanceBytes)
@@ -1177,6 +1184,13 @@ try {
             noticesGeneratorSource = $noticesGeneratorRecordPath
             noticesGeneratorSourceSha256 = $noticesGeneratorSha256
             noticesGeneratorExecution = 'Executed from the verified byte snapshot captured before restore.'
+        }
+        projectLicense = [ordered]@{
+            source = 'LICENSE'
+            artifactFile = 'LICENSE'
+            sha256 = $projectLicenseSha256
+            identifier = 'LicenseRef-UTSW-Academic-Research-Only'
+            scope = 'Original WinBulkTranscript project code and documentation only; excludes third-party packages, runtime/framework files, and models.'
         }
         model = [ordered]@{
             variant = $configuredModelVariant

@@ -252,7 +252,7 @@ try {
     }
 
     $appRoot = [System.Windows.Automation.AutomationElement]::FromHandle($process.MainWindowHandle)
-    if ($appRoot.Current.Name -ne 'Bulk Transcript') {
+    if ($appRoot.Current.Name -ne 'WinBulkTranscript by Jamieson Lab') {
         throw "Unexpected application window name '$($appRoot.Current.Name)'."
     }
 

@@ -5,6 +5,12 @@
     <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
     <RootNamespace>WinBulkTranscript.App</RootNamespace>
     <AssemblyName>WinBulkTranscript</AssemblyName>
+    <AssemblyTitle>WinBulkTranscript by Jamieson Lab</AssemblyTitle>
+    <Product>WinBulkTranscript by Jamieson Lab</Product>
+    <Company>Jamieson Lab</Company>
+    <Authors>Jamieson Lab</Authors>
+    <Description>Batch MP4-to-WebVTT transcription utility for academic research.</Description>
+    <Copyright>Copyright (c) 2026 The University of Texas Southwestern Medical Center.</Copyright>
     <UseWinUI>true</UseWinUI>
     <WindowsPackageType>None</WindowsPackageType>
     <EnableMsixTooling>false</EnableMsixTooling>
