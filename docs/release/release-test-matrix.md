@@ -3,13 +3,13 @@
 Release version: `TBD`
 Release date: `TBD`
 Release Foundry model variant: `TBD`
-Package lock commit: `TBD`
+Release source: `TBD`
 Release notes source: `TBD`
 Model provenance source: `TBD`
 Runtime framework notices source: `TBD`
 Single-file experiment record: `TBD` (future information only; folder/ZIP deployment remains version 1)
 
-The Foundry model must exactly match the configured application model. Each source header must use exact format `<file name> sha256:<lowercase SHA-256>`: use [the release-notes template](release-notes-template.md), [model-provenance template](model-provenance-template.json), and [runtime/framework notices template](runtime-framework-notices-template.txt).
+The release source is the exact `v<version>` tag for a tag release (or the full commit only for an explicitly local/manual build). The Foundry model must exactly match the configured application model. Each source header must use exact format `<file name> sha256:<lowercase SHA-256>`: use [the release-notes template](release-notes-template.md), [model-provenance template](model-provenance-template.json), and [runtime/framework notices template](runtime-framework-notices-template.txt).
 
 
 Before running the publisher, replace the headers and both `<version>` placeholders. For the architecture being published, every row below must be exactly `Passed` with retained evidence in the final column. The three source headers are filename-and-hash bindings to the exact external release inputs; do not enter a repository template name or an un-hashed path.

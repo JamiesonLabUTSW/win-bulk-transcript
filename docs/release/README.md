@@ -1,12 +1,18 @@
 # Release evidence
 
-This directory records the evidence needed to turn a successful build into a supported release. It intentionally contains templates and instructions rather than claims that unrun architecture and clean-machine gates have passed.
+This directory records the evidence needed to turn a successful build into a supported release. It intentionally contains templates and instructions rather than claims that unrun architecture and clean-machine gates have passed. A completed tag release stores its reviewed inputs in a committed [`release-inputs/v<version>` dossier](../../release-inputs/README.md).
+
+## Distribution format
+
+Version 1 ships as separate unpackaged, self-contained x64 and ARM64 ZIPs. This is the Windows App SDK deployment shape for xcopy/ZIP distribution: users extract the matching archive and run the application without registering a package or installing .NET/Windows App SDK separately.
+
+MSIX remains a future signed-distribution option. Windows 11 supports `Add-AppxPackage -AllowUnsigned` for an unsigned MSIX, but Microsoft describes it as a testing feature rather than broad distribution; executable packages normally require elevated, all-user installation and a special unsigned identity. A self-signed MSIX instead requires every target machine to trust the certificate first. Move to MSIX when the project has a Store, enterprise-trusted, or Artifact Signing identity and has validated package install/update behavior; do not publish a testing-only unsigned MSIX as an end-user installer.
 
 ## Preflight and build
 
 Complete a release test matrix before publishing an architecture. The publisher requires all of the following:
 
-- The matrix release version, model variant, and package-lock commit match the command and current repository revision.
+- The matrix release version, model variant, and release source match the command and verified repository revision/tag.
 - The entire source working tree is clean, every release-owned source path is tracked at `HEAD`, and `HEAD` remains unchanged through restore and publish.
 - Every row for the requested architecture says exactly `Passed` and has retained evidence or notes.
 - The matrix has a receipt row for the exact output ZIP name. Its checksum column should say that the publisher writes the matching sidecar; a ZIP cannot contain its own final hash.
@@ -14,7 +20,7 @@ Complete a release test matrix before publishing an architecture. The publisher 
 - The runtime/framework notice input must name every framework from the final `.runtimeconfig.json` and every non-lock framework package from the final `.deps.json`. It still requires legal review for completeness.
 - Record the literal single-file experiment result in the matrix header or linked evidence. It is future information only; do not replace the version 1 folder/ZIP artifact with that experiment.
 
-Set the matrix's Package lock commit header to the full output of `git rev-parse HEAD`.
+For a tag release, set each matrix's Release source header to the exact tag, such as `v1.2.3`. The publisher verifies that the tag resolves to the checked-out revision. For an explicitly local/manual package without `-ReleaseSourceRef`, use the full output of `git rev-parse HEAD`.
 
 The model argument is a validation assertion, not an override. It must equal the exact model configured in the application source. Update and test that configuration before changing the release command.
 
@@ -24,19 +30,35 @@ Use the [release-notes template](release-notes-template.md) for every architectu
 $modelVariant = 'nemotron-speech-streaming-en-0.6b-generic-cpu:3'
 $modelLicense = 'C:\release-inputs\model-license.txt'
 $modelProvenance = 'C:\release-inputs\model-provenance.json'
-$runtimeFrameworkNotices = 'C:\release-inputs\runtime-framework-notices.txt'
-$releaseNotes = 'C:\release-inputs\release-notes-win-x64.md'
-$testMatrix = 'C:\release-inputs\release-test-matrix.md'
+$x64RuntimeFrameworkNotices = 'C:\release-inputs\runtime-framework-notices-win-x64.txt'
+$arm64RuntimeFrameworkNotices = 'C:\release-inputs\runtime-framework-notices-win-arm64.txt'
+$releaseNotes = 'C:\release-inputs\release-notes.md'
+$x64TestMatrix = 'C:\release-inputs\release-test-matrix-win-x64.md'
+$arm64TestMatrix = 'C:\release-inputs\release-test-matrix-win-arm64.md'
 $artifactsRoot = 'C:\release-artifacts'
 
-# Checks the model/configuration, matrix, current package-lock commit, and inputs without writing artifacts.
-.\scripts\Publish-Release.ps1 -Version 0.1.0 -Architecture x64 -ModelVariant $modelVariant -ModelLicensePath $modelLicense -ModelProvenancePath $modelProvenance -RuntimeFrameworkNoticesPath $runtimeFrameworkNotices -ReleaseNotesPath $releaseNotes -ReleaseTestMatrixPath $testMatrix -ArtifactsRoot $artifactsRoot -ValidateOnly
+# Checks the model/configuration, matrix, current source revision, and inputs without writing artifacts.
+.\scripts\Publish-Release.ps1 -Version 0.1.0 -Architecture x64 -ModelVariant $modelVariant -ModelLicensePath $modelLicense -ModelProvenancePath $modelProvenance -RuntimeFrameworkNoticesPath $x64RuntimeFrameworkNotices -ReleaseNotesPath $releaseNotes -ReleaseTestMatrixPath $x64TestMatrix -ArtifactsRoot $artifactsRoot -ValidateOnly
 
-.\scripts\Publish-Release.ps1 -Version 0.1.0 -Architecture x64 -ModelVariant $modelVariant -ModelLicensePath $modelLicense -ModelProvenancePath $modelProvenance -RuntimeFrameworkNoticesPath $runtimeFrameworkNotices -ReleaseNotesPath $releaseNotes -ReleaseTestMatrixPath $testMatrix -ArtifactsRoot $artifactsRoot
-.\scripts\Publish-Release.ps1 -Version 0.1.0 -Architecture arm64 -ModelVariant $modelVariant -ModelLicensePath $modelLicense -ModelProvenancePath $modelProvenance -RuntimeFrameworkNoticesPath $runtimeFrameworkNotices -ReleaseNotesPath 'C:\release-inputs\release-notes-win-arm64.md' -ReleaseTestMatrixPath 'C:\release-inputs\release-test-matrix-arm64.md' -ArtifactsRoot $artifactsRoot
+.\scripts\Publish-Release.ps1 -Version 0.1.0 -Architecture x64 -ModelVariant $modelVariant -ModelLicensePath $modelLicense -ModelProvenancePath $modelProvenance -RuntimeFrameworkNoticesPath $x64RuntimeFrameworkNotices -ReleaseNotesPath $releaseNotes -ReleaseTestMatrixPath $x64TestMatrix -ArtifactsRoot $artifactsRoot
+.\scripts\Publish-Release.ps1 -Version 0.1.0 -Architecture arm64 -ModelVariant $modelVariant -ModelLicensePath $modelLicense -ModelProvenancePath $modelProvenance -RuntimeFrameworkNoticesPath $arm64RuntimeFrameworkNotices -ReleaseNotesPath $releaseNotes -ReleaseTestMatrixPath $arm64TestMatrix -ArtifactsRoot $artifactsRoot
 ~~~
 
-The scripts support Windows PowerShell 5.1 and PowerShell 7. The release machine still needs the required .NET SDK and the locked package graph; end-user clean-machine requirements apply to the published artifact, not the build machine.
+## Tag-based GitHub release
+
+The [`Release` workflow](../../.github/workflows/release.yml) runs for canonical SemVer tags such as `v1.2.3` and `v1.2.3-rc.1`. Before creating the tag:
+
+1. Complete all x64 and ARM64 clean-machine/UAT gates and institutional release approval.
+2. Copy the templates into `release-inputs/v<version>/` using the documented dossier layout. Use one shared `release-notes.md` that names both ZIPs and architecture-specific matrices/runtime notices.
+3. Finalize the model license, provenance, shared release notes, and both runtime/framework notices. Hash those completed files, bind the hashes in each matrix, set `Release source` to the future tag, and ensure every applicable architecture row says exactly `Passed`.
+4. Merge the dossier and all release changes to the repository's default branch. The tag workflow refuses a commit that is not reachable from that branch.
+5. Create the tag on that exact commit and push it: `git tag v1.2.3; git push origin v1.2.3`. Do not move or reuse a release tag.
+
+The workflow independently builds x64 and ARM64 from the tagged commit, runs the deterministic build/tests and hardening checks, invokes the same publisher used locally, and transfers only each ZIP, checksum sidecar, and release record. Its publication job revalidates the assembled six-file set and embedded metadata/hashes, writes `SHA256SUMS.txt`, generates GitHub/Sigstore build-provenance attestations, and creates a **draft** GitHub Release from the reviewed shared notes. Configure the repository's `release` environment with required reviewers so the write-capable job cannot run without approval. Also [enable immutable releases](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes) and protect `v*` tags from unauthorized creation, update, and deletion with a [tag ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets). A human must inspect the draft assets/notes and publish it in GitHub; the workflow deliberately does not make a public release automatically. When release immutability is enabled, publishing the completed draft locks its tag and assets.
+
+The release job needs only the scoped `GITHUB_TOKEN`; no signing secret is required for the current unsigned ZIPs. GitHub attestations establish which workflow and commit produced a ZIP, but they are not Authenticode signatures and do not prevent SmartScreen warnings. Consumers can verify an asset with `gh attestation verify <zip> --repo JamiesonLabUTSW/win-bulk-transcript` in addition to checking `SHA256SUMS.txt`.
+
+The scripts support Windows PowerShell 5.1 and PowerShell 7. The build machine needs the SDK selected by [`global.json`](../../global.json) and the locked package graph; end-user clean-machine requirements apply to the published artifact, not the build machine.
 
 `ArtifactsRoot` is mandatory and must be outside the repository (for example `C:\release-artifacts`). This keeps build output outside the source tree, so provenance verification does not depend on ignored-output policy.
 

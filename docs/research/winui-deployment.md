@@ -81,6 +81,12 @@ This folder/ZIP form is the safest first target because Foundry includes native 
 
 The confirmed initial artifact is the self-contained ZIP/folder form. A literal one-file executable is not a version 1 requirement and can be reconsidered later if its extraction behavior offers a real distribution benefit.
 
+### Why not unsigned MSIX for version 1?
+
+Windows 11 can register a deliberately unsigned MSIX with `Add-AppxPackage -AllowUnsigned`, but [Microsoft documents that mechanism as a testing convenience](https://learn.microsoft.com/en-us/windows/msix/package/unsigned-package) and says not to use it for broad distribution. An unsigned package with executable content generally requires elevated installation for all users and a special manifest identity. A self-signed MSIX is also possible, but each target device must first trust its certificate. Neither provides a clean double-click install for an external unsigned release.
+
+MSIX becomes attractive when the project has a trusted signing identity or Store channel: it then provides package identity, clean install/uninstall, architecture bundles, and update options. Until that operational prerequisite exists, the unsigned self-contained ZIP has less user/admin friction and matches the already selected clean-machine test surface. GitHub artifact attestations may supplement ZIP provenance but do not replace Authenticode/MSIX signing or SmartScreen reputation.
+
 ## Unsigned distribution consequences
 
 The initial artifacts will have no Authenticode publisher signature. That is technically runnable, but it is not frictionless distribution. Microsoft says an unsigned download commonly triggers “Windows protected your PC”; the user must choose Run anyway, and enterprise policy may prohibit bypass. Unsigned files also start reputation from zero for every new build. See [SmartScreen reputation for Windows app developers](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation).

@@ -1,13 +1,12 @@
 # WinBulkTranscript release notes — `<version>`
 
 Release date: `<YYYY-MM-DD>`
-Architecture artifact: `WinBulkTranscript-<version>-win-<x64|arm64>.zip`
-Matrix source binding: `<this release-notes file name> sha256:<lowercase SHA-256>`
-Release evidence: `<link or retained path to the completed release-test matrix and release record>`
+Architecture artifacts: `WinBulkTranscript-<version>-win-x64.zip`, `WinBulkTranscript-<version>-win-arm64.zip`
+Release evidence: `<links or retained paths to the completed architecture matrices and release records>`
 
 ## Included artifact
 
-This release is an unpackaged, self-contained Windows folder distributed in a ZIP archive. Extract the ZIP before launching `WinBulkTranscript.exe`. The matching checksum sidecar is `WinBulkTranscript-<version>-win-<architecture>.zip.sha256`. The ZIP includes `PUBLISH-PAYLOAD.json`, `MODEL-PROVENANCE.json`, and the release-specific runtime/framework notices in addition to the app payload and other release evidence.
+This release provides unpackaged, self-contained Windows folders in architecture-specific ZIP archives. Choose x64 for Intel/AMD Windows PCs or ARM64 for Windows on Arm. Extract the ZIP before launching `WinBulkTranscript.exe`. Each ZIP has a matching `.zip.sha256` sidecar, and `SHA256SUMS.txt` covers both. The ZIP includes `PUBLISH-PAYLOAD.json`, `MODEL-PROVENANCE.json`, and release-specific runtime/framework notices in addition to the app payload and other release evidence.
 
 ## First use and connectivity
 
@@ -20,10 +19,11 @@ The application downloads its configured local speech model on first use. A late
 ## Validation summary
 
 - Exact configured model variant: `<model variant>`
-- Package-lock commit: `<full Git revision>`
-- Matrix status for this architecture: `<Passed>`
+- Release source: `<v-prefixed release tag>`
+- Matrix status: `<x64 Passed; ARM64 Passed>`
 - Model provenance input: `<file name and SHA-256>`
-- Runtime/framework notice input: `<file name and SHA-256>`
+- x64 runtime/framework notice input: `<file name and SHA-256>`
+- ARM64 runtime/framework notice input: `<file name and SHA-256>`
 - Known limitations or operator notes: `<none or concise text>`
 
 ## Version 1 deployment decision
@@ -34,4 +34,4 @@ Version 1 remains a self-contained folder/ZIP deployment. A literal single-file 
 
 `<support contact, issue tracker, or distribution contact>`
 
-Before publishing, replace every placeholder. The publisher verifies that the completed notes name the requested version and exact ZIP artifact and retain the unsigned SmartScreen warning; the test matrix binds this specific file by filename and SHA-256.
+Before publishing, replace every placeholder, then compute this completed file's SHA-256 and put that filename/hash in each test matrix's `Release notes source` header. The publisher verifies that the notes name the requested version and exact ZIP artifact for each architecture and retain the unsigned SmartScreen warning.
